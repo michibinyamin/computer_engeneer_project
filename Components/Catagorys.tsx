@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+//import { StyleSheet, Text, View, TouchableOpacity } from 'react-native-web';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art'];
@@ -11,28 +13,21 @@ const getColor = (index: number) => {
 
 const Catagorys = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>RecoMate</Text>
-      </View>
       <View style={styles.buttonGrid}>
         {options.map((option, index) => (
           <TouchableOpacity key={index} style={[styles.button, { backgroundColor: getColor(index) }]}>
-            <Text style={styles.buttonText}>{option}</Text>
+            <Text style={styles.buttonText}>
+              {option}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
-    </SafeAreaView>
   );
 };
 
 export default Catagorys;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
   header: {
     backgroundColor: 'darkblue',
     width: '100%',
