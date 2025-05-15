@@ -1,36 +1,48 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 
-const Login = ({ navigation }) => {
+const Register = ({navigation}) => {
+ 
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
-
-  
 
 const handleSubmit = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
+      if (formData.password !== formData.confirmPassword) {
+        alert("Passwords don't match");
+        return;
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
       
-      console.log("User logged in:", userCredential.user);
-      navigation.navigate('GeneralList');
+      console.log("User registered:", userCredential.user);
+      navigation.navigate('Login');
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Registration error:", error);
       alert(error);
     }
   };
 
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>Join RecoMate</Text>
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={formData.username}
+        onChangeText={(text) => setFormData({...formData, username: text})}
+      />
       
       <TextInput
         style={styles.input}
@@ -47,17 +59,25 @@ const handleSubmit = async () => {
         value={formData.password}
         onChangeText={(text) => setFormData({...formData, password: text})}
       />
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        secureTextEntry
+        value={formData.confirmPassword}
+        onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+      />
 
       <TouchableOpacity 
         style={styles.button} 
         onPress={handleSubmit}
       >
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>Create Account</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.signupText}>
-          Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.loginText}>
+          Already have an account? <Text style={styles.loginLink}>Sign In</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -97,16 +117,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  signupText: {
+  loginText: {
     textAlign: 'center',
     marginTop: 15,
     fontSize: 16,
     color: '#666',
   },
-  signupLink: {
+  loginLink: {
     color: 'darkblue',
     fontWeight: 'bold',
   },
 });
 
-export default Login;
+export default Register;
