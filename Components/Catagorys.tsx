@@ -1,8 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-//import { StyleSheet, Text, View, TouchableOpacity } from 'react-native-web';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art'];
 
