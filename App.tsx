@@ -1,8 +1,8 @@
 import React from 'react';
+import GeneralList from './Components/GeneralList';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Register from './Components/Register';
 import Login from './Components/Login';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -12,6 +12,7 @@ import WelcomeScreen from './Components/WelcomeScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
+  const [selectedTab, setSelectedTab] = useState('General'); // Default tab
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -19,20 +20,8 @@ export default function App() {
               <Text style={styles.headerText}>RecoMate</Text>
           </View>
 
-          <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Welcome"
-        screenOptions={{
-          headerShown: false
-        }}
-      >
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="GeneralList" component={GeneralList} />
-      </Stack.Navigator>
-    </NavigationContainer>
-
+          <Login /> 
+          {/* <GeneralList /> */}
       </SafeAreaView>
       <StatusBar style="auto" />
 
@@ -61,6 +50,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 35,
     fontWeight: 'bold',
+  },
+  tabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    backgroundColor: 'lightblue',
+  },
+  tabsText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
   },
 
 });
