@@ -62,5 +62,16 @@ const styles = StyleSheet.create({
     fontSize: 35,
     fontWeight: 'bold',
   },
+  tabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    backgroundColor: 'lightblue',
+  },
+  tabsText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
+  },
 
 });
