@@ -8,6 +8,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import GeneralList from './Components/GeneralList';
 import WelcomeScreen from './Components/WelcomeScreen';
+import Tabs from './Components/Tabs';
 
 const Stack = createStackNavigator();
 
@@ -29,7 +30,7 @@ export default function App() {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="GeneralList" component={GeneralList} />
+        <Stack.Screen name="Tabs" component={Tabs} />
       </Stack.Navigator>
     </NavigationContainer>
 

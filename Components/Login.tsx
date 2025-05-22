@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import Tabs from './Tabs';
 
 const Login = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ const handleSubmit = async () => {
       );
       
       console.log("User logged in:", userCredential.user);
-      navigation.navigate('GeneralList');
+      navigation.navigate('Tabs');
     } catch (error) {
       console.error("Login error:", error);
       alert(error);
