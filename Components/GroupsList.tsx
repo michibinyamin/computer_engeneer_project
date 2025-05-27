@@ -5,8 +5,6 @@ import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { addMembership, fetchGroups, createGroup } from '../Services';
 
-let groupCounter = 1;
-
 const GroupsList = () => {
 
   const [options, setOptions] = useState<string[]>([]);
@@ -17,21 +15,7 @@ const GroupsList = () => {
   const [inviteUsername, setInviteUsername] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [categorysOpen, setOpen] = useState(false);
-
-  // const fetchGroups = async () => {
-  //   const querySnapshot = await getDocs(collection(db, 'groups'));
-  //   const groupNames = querySnapshot.docs.map(doc => doc.data().name);
-  //   setOptions(groupNames);
-
-  
-  //   groupCounter = querySnapshot.docs.length + 1;
-  // };
-  interface Group {
-    created_by: string;
-    description?: string;
-    group_id?: string;
-    name: string;
-  }
+ 
   const loadGroups = async () => {
     const groups = await fetchGroups(auth.currentUser?.uid) ?? [];
     setOptions(groups);
@@ -41,6 +25,7 @@ const GroupsList = () => {
     loadGroups();
   }, []);
 
+  // Function to add new members to a group
   const handleInvite = async () => {
     try {
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -134,6 +119,7 @@ const GroupsList = () => {
               </View>
             </View>
           </Modal>
+          
           <Modal
             animationType="slide"
             transparent={true}
