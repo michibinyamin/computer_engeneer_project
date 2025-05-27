@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+
 
 const Register = ({navigation}) => {
  
@@ -14,6 +16,37 @@ const Register = ({navigation}) => {
 
 const handleSubmit = async () => {
     try {
+      const userRef = collection(db, "users");
+      const usernameQuery = query(userRef, where("username", "==", formData.username));
+      const querySnapshot = await getDocs(usernameQuery);
+
+      const isValidEmail = (email: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      };
+
+      //later
+      const strongePasswordChecker = () => {};
+      if (
+          !formData.username.trim() ||
+          !formData.email.trim() ||
+          !formData.password.trim() ||
+          !formData.confirmPassword.trim()
+      ) {
+          alert("Please fill in all fields.");
+          return;
+        }
+
+      if (!querySnapshot.empty) {
+        alert("Username already taken, Choose another one.");
+        return;
+      }
+
+      if (!isValidEmail(formData.email)) {
+        alert("Invalid Email, Please enter a valid email address.");
+        return;
+      }
+
       if (formData.password !== formData.confirmPassword) {
         alert("Passwords don't match");
         return;
@@ -24,20 +57,28 @@ const handleSubmit = async () => {
         formData.email,
         formData.password
       );
-      
-      console.log("User registered:", userCredential.user);
+
+      const user = userCredential.user;
+      await setDoc(doc(db, "users", formData.username), {
+        user_id: user.uid,
+        username: formData.username,
+        email: formData.email,
+      }); 
+
+      alert(`Account created successfully!\nWelcome, ${formData.username}`);
       navigation.navigate('Login');
+
     } catch (error) {
       console.error("Registration error:", error);
       alert(error);
     }
-  };
+};
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Join RecoMate</Text>
       
-      <TextInput
+      <TextInput     
         style={styles.input}
         placeholder="Username"
         value={formData.username}

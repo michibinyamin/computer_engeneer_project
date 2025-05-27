@@ -1,14 +1,15 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Register from './Components/Register';
 import Login from './Components/Login';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import GeneralList from './Components/GeneralList';
 import WelcomeScreen from './Components/WelcomeScreen';
 import Tabs from './Components/Tabs';
+import ResetPassword from './Components/ResetPassword';
+
 
 const Stack = createStackNavigator();
 
@@ -31,6 +32,8 @@ export default function App() {
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Tabs" component={Tabs} />
+        <Stack.Screen name="ResetPassword" component={ResetPassword} />
+
       </Stack.Navigator>
     </NavigationContainer>
 
