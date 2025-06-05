@@ -1,78 +1,60 @@
 import { addDoc, collection, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
-// Adds to membership collection
-export const addMembership = async (group_id: string, user_id: string, role: 'Admin' | 'Member') => {
-  if (!user_id) return;
-  const snapshot = await getDocs(collection(db, 'membership'));
-  const nextId = snapshot.size + 1;
-
-  await addDoc(collection(db, 'membership'), {
-    membership_id: `membership_${nextId}`,
-    user_id: user_id,
-    group_id: group_id,
-    role: role
-  });
-};
-
+// Fetches group names for a user
 export const fetchGroups = async (user_id: string | undefined) => {
   if (!user_id) return [];
 
-  // Get memberships where user_id matches
-  const membershipQuery = query(collection(db, 'membership'), where('user_id', '==', user_id));
-  const membershipSnap = await getDocs(membershipQuery);
+  const membershipSnap = await getDocs(collection(db, 'membership'));
+      const userGroupIds = membershipSnap.docs
+        .filter(doc => doc.data().user_id === user_id)
+        .map(doc => doc.data().group_id);
+  
+      const groupSnap = await getDocs(collection(db, 'groups'));
+      const userGroups = groupSnap.docs
+        .filter(doc => userGroupIds.includes(doc.id))
+        .map(doc => ({ id: doc.id, name: doc.data().name }));
 
-  const groupIds = membershipSnap.docs.map(doc => doc.data().group_id);
-
-  // Fetch each group by ID
-  const groupPromises = groupIds.map(id => getDoc(doc(db, 'groups', id)));
-  const groupDocs = await Promise.all(groupPromises);
-
-  const groupNames = groupDocs
-    .filter(doc => doc.exists())
-    .map(doc => doc.data()?.name);  // .name
-
-  return groupNames;
+  return userGroups;
 };
-
 
 
 // Adds to group collection
 let groupCounter = 1;
-export const createGroup = async (name: string, description: string, user_id: string) => {
-
-    const snapshot = await getDocs(collection(db, 'membership'));
-    const nextId = snapshot.size + 1;
-    if (!name.trim()) {
-        alert('Group name is required.');
-        return;
-    }
-
-    //const user = auth.currentUser;
-    if (!user_id) {
-        alert('You must be logged in to create a group.');
-        return;
-    }
-
-    try {
-        const userRef = doc(db, 'users', user_id);
-        const userSnap = await getDoc(userRef);
-        const username = userSnap.exists() ? userSnap.data().username : user_id;
-
-        const groupId = `group_${nextId}`;
-
-        await setDoc(doc(db, 'groups', groupId), {
-        group_id: groupId,
-        name,
-        description,
-        created_by: username
+export const createGroup = async (groupName: string, groupDesc: string, createdByUserId: string) => {
+  try {
+    const groupRef = await addDoc(collection(db, 'groups'), {
+      name: groupName,
+      description: groupDesc,
+      created_by: createdByUserId
     });
 
-        groupCounter += 1; 
-        alert('Group created successfully!');
-        await addMembership(groupId, user_id, 'Admin'); // Add the creator as an admin
-    } catch (error) {
-        console.error('Error creating group:', error);
-        alert('Failed to create group.');
-    }
+    await addDoc(collection(db, 'membership'), {
+      membership_id: `membership_${Date.now()}`,
+      user_id: createdByUserId,
+      group_id: groupRef.id,
+      role: 'Admin'
+    });
+  } catch (error) {
+    console.error('Create group failed:', error);
+    alert('Failed to create group');
+  }
 };
+
+export const addMembership = async (inviteUsername : string, group_id: string) => {
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const userDoc = usersSnap.docs.find(doc => doc.data().username === inviteUsername);
+      if (!userDoc) return alert('User not found');
+
+      const invitedUserId = userDoc.id;
+      await addDoc(collection(db, 'membership'), {
+        membership_id: `membership_${Date.now()}`,
+        user_id: invitedUserId,
+        group_id: group_id,
+        role: 'Member'
+      });
+    } catch (err) {
+      console.error('Invite failed:', err);
+    }
+  };

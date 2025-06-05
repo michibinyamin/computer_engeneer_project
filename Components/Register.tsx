@@ -6,7 +6,6 @@ import { doc, setDoc, collection, query, where, getDocs } from "firebase/firesto
 
 
 const Register = ({navigation}) => {
- 
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -59,7 +58,7 @@ const handleSubmit = async () => {
       );
 
       const user = userCredential.user;
-      await setDoc(doc(db, "users", formData.username), {
+      await setDoc(doc(db, "users", user.uid), {
         user_id: user.uid,
         username: formData.username,
         email: formData.email,
