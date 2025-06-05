@@ -1,18 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+//import { StyleSheet, Text, View, TouchableOpacity } from 'react-native-web';
+import {fetchCategories} from '../Services';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art'];
+const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art']; // Example options
 
 const getColor = (index: number) => {
   const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#FF8C33', '#33FFF2'];
   return colors[index % colors.length];
 };
 
-const Catagorys = () => {
+const Catagorys = ({ group_id }: { group_id: string }) => {
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+
+  // get from firebase all the grops with the group_id
+useEffect(() => {
+  if (group_id == "General"){
+    setCategoryOptions(options);
+    return;
+  }
+  const fetchData = async () => {
+    const categories = await fetchCategories(group_id);
+    setCategoryOptions(categories);
+  };
+  fetchData();
+}, [group_id]);
+
   return (
       <View style={styles.buttonGrid}>
-        {options.map((option, index) => (
+        {categoryOptions.map((option, index) => (
           <TouchableOpacity key={index} style={[styles.button, { backgroundColor: getColor(index) }]}>
             <Text style={styles.buttonText}>
               {option}

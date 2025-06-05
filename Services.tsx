@@ -58,3 +58,14 @@ export const addMembership = async (inviteUsername : string, group_id: string) =
       console.error('Invite failed:', err);
     }
   };
+
+  export const fetchCategories = async (group_id: string) => {
+    if (!group_id) return [];
+
+    const categoriesSnap = await getDocs(collection(db, 'categories'));
+    const groupCategories = categoriesSnap.docs
+      .filter(doc => doc.data().group_id === group_id)
+      .map(doc => doc.data().name);
+
+    return groupCategories;
+  }

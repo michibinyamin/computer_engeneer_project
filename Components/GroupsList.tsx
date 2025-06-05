@@ -50,13 +50,16 @@ const GroupsList = () => {
 
   return (
     <>
-      {categorysOpen ? <Catagorys /> : (
+      {categorysOpen ? <Catagorys group_id={selectedGroupId} /> : (
         <View style={styles.buttonGrid}>
           {options.map((group, index) => (
             <TouchableOpacity
               key={index}
               style={[styles.button, { backgroundColor: '#d3d3d3' }]}
-              onPress={() => setOpen(true)}
+              onPress={() => {
+                setOpen(true);
+                setSelectedGroupId(group.id);
+              }}
               onLongPress={() => {
                 setSelectedGroupId(group.id);
                 setInviteModalVisible(true);
