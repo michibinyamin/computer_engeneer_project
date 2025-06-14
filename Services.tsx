@@ -20,7 +20,6 @@ export const fetchGroups = async (user_id: string | undefined) => {
 
 
 // Adds to group collection
-let groupCounter = 1;
 export const createGroup = async (groupName: string, groupDesc: string, createdByUserId: string) => {
   try {
     const groupRef = await addDoc(collection(db, 'groups'), {

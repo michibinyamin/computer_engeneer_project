@@ -5,7 +5,7 @@ import { auth, db } from "../firebase";
 import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 
-const Register = ({navigation}) => {
+const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => void } }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',

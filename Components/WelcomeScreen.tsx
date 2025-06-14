@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
-
-const WelcomeScreen = ({navigation}) => {
+;
+const WelcomeScreen = ({ navigation }: { navigation: { navigate: (arg0: string) => void } })  => {
   return (
     <View style={styles.container}>
       <Image 

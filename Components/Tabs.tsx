@@ -4,7 +4,7 @@ import GeneralList from './GeneralList';
 import GroupsList from './GroupsList';
 import PersonalList from './PersonalList'; 
 const Tabs = () => {
-    const [selectedTab, setSelectedTab] = useState('General'); // Default tab
+    const [selectedTab, setSelectedTab] = useState('General'); 
     return(
         <>
             <View style={styles.tabs}>

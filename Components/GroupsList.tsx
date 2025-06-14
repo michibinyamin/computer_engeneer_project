@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import Catagorys from './Catagorys';
-import {StyleSheet,Text,View,TouchableOpacity,TextInput,Modal,Pressable} from 'react-native';
-import {collection,getDocs,addDoc,doc} from 'firebase/firestore';
-import { db, auth } from '../firebase';
-import {addMembership, fetchGroups, createGroup} from '../Services'; // Import any necessary services if needed
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Pressable,
+  ScrollView,
+} from 'react-native';
+import { auth } from '../firebase';
+import { fetchGroups, createGroup } from '../Services';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const GroupsList = () => {
   const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDesc, setGroupDesc] = useState('');
-  const [inviteUsername, setInviteUsername] = useState('');
-  const [selectedGroupId, setSelectedGroupId] = useState('');
-  const [categorysOpen, setOpen] = useState(false);
 
-  const loadGroups = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    const userGroups = await fetchGroups(user.uid);
-    setOptions(userGroups);
-  };
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
@@ -29,10 +29,16 @@ const GroupsList = () => {
     return unsubscribe;
   }, []);
 
+  const loadGroups = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const userGroups = await fetchGroups(user.uid);
+    setOptions(userGroups);
+  };
+
   const create_Group = async () => {
     const user = auth.currentUser;
     if (!user || !groupName.trim()) return;
-
     await createGroup(groupName, groupDesc, user.uid);
     setModalVisible(false);
     setGroupName('');
@@ -40,118 +46,109 @@ const GroupsList = () => {
     await loadGroups();
   };
 
+  const renderGroupList = () => (
+    <ScrollView contentContainerStyle={styles.groupListContainer}>
+      {options.map((group, index) => (
+        <TouchableOpacity
+          key={index}
+          style={styles.groupCard}
+          onPress={() => navigation.navigate('GroupInfo', { groupId: group.id })}
+        >
+          <Text style={styles.groupName}>{group.name}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 
-  const handleInvite = async () => {
-    addMembership(inviteUsername, selectedGroupId);
-    setInviteModalVisible(false);
-    setInviteUsername('');
-    await loadGroups();
-  };
+  const renderCreateGroupModal = () => (
+    <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Create New Group</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Group name"
+            value={groupName}
+            onChangeText={setGroupName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Description (optional)"
+            value={groupDesc}
+            onChangeText={setGroupDesc}
+          />
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={styles.createButton}
+              onPress={create_Group}
+              testID="create-button"
+            >
+              <Text style={styles.createButtonText}>Create</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.createButton, styles.cancelButton]}
+              onPress={() => setModalVisible(false)}
+              testID="cancel-button"
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
-    <>
-      {categorysOpen ? <Catagorys group_id={selectedGroupId} /> : (
-        <View style={styles.buttonGrid}>
-          {options.map((group, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.button, { backgroundColor: '#d3d3d3' }]}
-              onPress={() => {
-                setOpen(true);
-                setSelectedGroupId(group.id);
-              }}
-              onLongPress={() => {
-                setSelectedGroupId(group.id);
-                setInviteModalVisible(true);
-              }}
-            >
-              <Text style={styles.buttonText}>{group.name}</Text>
-            </TouchableOpacity>
-          ))}
+    <View style={styles.container}>
+      <Text style={styles.title}>Your Groups</Text>
+      {renderGroupList()}
 
-          <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-            <Text style={styles.buttonText}>Create Group</Text>
-          </TouchableOpacity>
+      <TouchableOpacity
+        testID="open-modal-button"
+        style={styles.fab}
+        onPress={() => setModalVisible(true)}
+      >
+        <Ionicons name="add-circle" size={60} color="darkblue" />
+      </TouchableOpacity>
 
-          <Modal visible={modalVisible} animationType="slide" transparent={true}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.createGroupModalView}>
-                <Text style={styles.createGroupTitle}>Create New Group</Text>
-                <TextInput
-                  style={styles.createInput}
-                  placeholder="Group name"
-                  value={groupName}
-                  onChangeText={setGroupName}
-                />
-                <TextInput
-                  style={styles.createInput}
-                  placeholder="Description (optional)"
-                  value={groupDesc}
-                  onChangeText={setGroupDesc}
-                />
-                <View style={styles.createGroupButtons}>
-                  <Pressable style={styles.createGroupButton} onPress={create_Group}>
-                    <Text style={styles.createGroupText}>Create</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.createGroupButton, styles.cancelGroupButton]}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={styles.cancelGroupText}>Cancel</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          </Modal>
-
-          <Modal visible={inviteModalVisible} animationType="slide" transparent={true}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.inviteModalView}>
-                <Text style={styles.inviteTitle}>Invite User to Group</Text>
-                <TextInput
-                  style={styles.inviteInput}
-                  placeholder="Enter username"
-                  value={inviteUsername}
-                  onChangeText={setInviteUsername}
-                />
-                <View style={styles.inviteButtons}>
-                  <Pressable style={styles.inviteButton} onPress={handleInvite}>
-                    <Text style={styles.inviteText}>Send Invite</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.inviteButton, styles.cancelInviteButton]}
-                    onPress={() => setInviteModalVisible(false)}
-                  >
-                    <Text style={styles.cancelInviteText}>Cancel</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        </View>
-      )}
-    </>
+      {renderCreateGroupModal()}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    margin: 20,
-    gap: 10,
+  container: {
+    backgroundColor: '#f2f2f2',
   },
-  button: {
-    backgroundColor: 'darkblue',
-    width: '100%',
-    padding: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'black',
-    fontSize: 25,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 16,
+    color: 'black',
+  },
+  groupListContainer: {
+    padding: 20,
+    gap: 12,
+  },
+  groupCard: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 20,
+    paddingHorizontal: 25,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+  },
+  groupName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  fab: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -159,19 +156,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  createGroupModalView: {
+  modalView: {
     backgroundColor: 'white',
     padding: 25,
     borderRadius: 12,
     width: '85%',
   },
-  createGroupTitle: {
+  modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
   },
-  createInput: {
+  input: {
     height: 45,
     borderColor: '#ddd',
     borderWidth: 1,
@@ -180,71 +177,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 15,
   },
-  createGroupButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-  createGroupButton: {
-    flex: 1,
-    paddingVertical: 12,
-    marginHorizontal: 5,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: 'darkblue',
-  },
-  cancelGroupButton: {
-    backgroundColor: '#ccc',
-  },
-  createGroupText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  cancelGroupText: {
-    color: 'black',
-    fontWeight: 'bold',
-  },
-  inviteModalView: {
-    backgroundColor: 'white',
-    padding: 25,
-    borderRadius: 12,
-    width: '85%',
-  },
-  inviteTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inviteInput: {
-    height: 45,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    marginBottom: 20,
-  },
-  inviteButtons: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  inviteButton: {
+  createButton: {
     flex: 1,
+    backgroundColor: 'darkblue',
     paddingVertical: 12,
-    marginHorizontal: 5,
     borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: 'darkblue',
+    marginHorizontal: 5,
   },
-  cancelInviteButton: {
+  cancelButton: {
     backgroundColor: '#ccc',
   },
-  inviteText: {
+  createButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
-  cancelInviteText: {
+  cancelButtonText: {
     color: 'black',
     fontWeight: 'bold',
   },

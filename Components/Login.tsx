@@ -1,50 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import * as Google from 'expo-auth-session/providers/google';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import * as AuthSession from 'expo-auth-session';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
-const Login = ({ navigation }) => {
-  console.log(AuthSession.makeRedirectUri());
-
-  const [formData, setFormData] = useState({ email: '', password: '' });
-
-  
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: '460576278701-tma9teamaca9dhkjc125j25bbcnd742p.apps.googleusercontent.com',
-    androidClientId: '460576278701-l7muhuo81032m4kfq0m2m6qfj2n8gqbq.apps.googleusercontent.com',
-    webClientId: '460576278701-l7muhuo81032m4kfq0m2m6qfj2n8gqbq.apps.googleusercontent.com',
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-
-      signInWithCredential(auth, credential)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              user_id: user.uid,
-              email: user.email,
-              username: user.displayName || user.email.split('@')[0],
-            });
-          }
-
-          navigation.navigate('Tabs');
-        })
-        .catch((error) => {
-          console.error('Google Sign-In Error:', error);
-          alert('Google login failed. Please try again.');
-        });
-    }
-  }, [response]);
+const Login = ({
+  navigation,
+}: {
+  navigation: { navigate: (screen: string) => void; goBack: () => void };
+}) => {
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleSubmit = async () => {
     try {
@@ -53,10 +24,14 @@ const Login = ({ navigation }) => {
         return;
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       console.log("User logged in:", userCredential.user);
-      navigation.navigate('Tabs');
-    } catch (error) {
+      navigation.navigate("Tabs");
+    } catch (error: any) {
       console.error("Login error:", error);
       alert(error.message);
     }
@@ -82,7 +57,7 @@ const Login = ({ navigation }) => {
         onChangeText={(text) => setFormData({ ...formData, password: text })}
       />
 
-      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
+      <TouchableOpacity onPress={() => navigation.navigate("ResetPassword")}>
         <Text style={styles.forgotPasswordLink}> Forgot password? </Text>
       </TouchableOpacity>
 
@@ -90,12 +65,15 @@ const Login = ({ navigation }) => {
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+      <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.signupText}>
           Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
         </Text>
       </TouchableOpacity>
 
+      {/* SOCIAL LOGINS (disabled for now) */}
+
+      {/*
       <View style={styles.orContainer}>
         <View style={styles.line} />
         <Text style={styles.orText}>Or</Text>
@@ -104,24 +82,34 @@ const Login = ({ navigation }) => {
 
       <TouchableOpacity>
         <View style={styles.facebookContainer}>
-          <Image source={require('../assets/facebook.png')} style={styles.facebookLogo} />
+          <Image
+            source={require('../assets/facebook.png')}
+            style={styles.facebookLogo}
+          />
           <Text style={styles.facebookText}> Login with Facebook </Text>
         </View>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => promptAsync()}>
         <View style={styles.googleContainer}>
-          <Image source={require('../assets/google.png')} style={styles.googleLogo} />
+          <Image
+            source={require('../assets/google.png')}
+            style={styles.googleLogo}
+          />
           <Text style={styles.GoogleText}> Login with Google </Text>
         </View>
       </TouchableOpacity>
 
       <TouchableOpacity>
         <View style={styles.appleContainer}>
-          <Image source={require('../assets/apple.png')} style={styles.appleLogo} />
+          <Image
+            source={require('../assets/apple.png')}
+            style={styles.appleLogo}
+          />
           <Text style={styles.appleText}> Login with Apple </Text>
         </View>
       </TouchableOpacity>
+      */}
     </View>
   );
 };
@@ -133,47 +121,51 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'darkblue',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "darkblue",
+    textAlign: "center",
     marginBottom: 20,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     padding: 15,
     marginBottom: 15,
     fontSize: 16,
   },
   button: {
-    backgroundColor: 'darkblue',
+    backgroundColor: "darkblue",
     padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   signupText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 15,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   signupLink: {
-    color: 'darkblue',
-    fontWeight: 'bold',
+    color: "darkblue",
+    fontWeight: "bold",
   },
   forgotPasswordLink: {
-    color: 'darkblue',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "darkblue",
+    fontWeight: "bold",
+    textAlign: "center",
   },
+
+  // --- Disabled social login styles below ---
+
+  /*
   orContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -253,6 +245,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 10,
   },
+  */
 });
 
 export default Login;

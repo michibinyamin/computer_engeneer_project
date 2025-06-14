@@ -4,7 +4,11 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 
 
-const ResetPassword = ({navigation}) => {
+const ResetPassword = ({
+  navigation,
+}: {
+  navigation: { navigate: (screen: string) => void; goBack: () => void };
+}) => {
 
     const [email, setEmail] = useState('');
 
