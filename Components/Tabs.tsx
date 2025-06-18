@@ -1,44 +1,90 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import GeneralList from './GeneralList';
 import GroupsList from './GroupsList';
-import PersonalList from './PersonalList'; 
-const Tabs = () => {
-    const [selectedTab, setSelectedTab] = useState('General'); 
-    return(
-        <>
-            <View style={styles.tabs}>
-              <TouchableOpacity onPress={() => setSelectedTab('General')}>
-                  <Text style={[styles.tabsText, selectedTab == "General" && { color: 'blue' }]}>General</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSelectedTab('Groups')}>
-                  <Text style={[styles.tabsText, selectedTab == "Groups" && { color: 'blue' }]}>Groups</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSelectedTab('Personal')}>
-                  <Text style={[styles.tabsText, selectedTab == "Personal" && { color: 'blue' }]}>Personal</Text>
-              </TouchableOpacity>
-          </View>
-          <View>
-              {selectedTab === 'General' && <GeneralList />}
-              {selectedTab === 'Groups' && <GroupsList /> }
-              {selectedTab === 'Personal' && <PersonalList />}
-          </View>
-        </>
+import PersonalList from './PersonalList';
+import { auth } from '../firebase';
+import ManagePanel from './ManagePanel'; // this will be your admin page
 
-    )
-}
-export default Tabs;
+const adminEmails = ['omar@gmail.com', 'Adi.yohanann@gmail.com','michibinyamin@gmail.com']; // Add your admin email(s)
+
+const Tabs = () => {
+  const [activeTab, setActiveTab] = useState('General');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && adminEmails.includes(user.email ?? '')) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'General':
+        return <GeneralList />;
+      case 'Groups':
+        return <GroupsList />;
+      case 'Personal':
+        return <PersonalList />;
+      case 'Manage':
+        return <ManagePanel />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity onPress={() => setActiveTab('General')}>
+          <Text style={[styles.tab, activeTab === 'General' && styles.activeTab]}>
+            General
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab('Groups')}>
+          <Text style={[styles.tab, activeTab === 'Groups' && styles.activeTab]}>
+            Groups
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab('Personal')}>
+          <Text style={[styles.tab, activeTab === 'Personal' && styles.activeTab]}>
+            Personal
+          </Text>
+        </TouchableOpacity>
+        {isAdmin && (
+          <TouchableOpacity onPress={() => setActiveTab('Manage')}>
+            <Text style={[styles.tab, activeTab === 'Manage' && styles.activeTab]}>
+              Manage
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {renderContent()}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-    tabs: {
+  tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 10,
-    backgroundColor: 'lightblue',
+    paddingTop: 10,
+    backgroundColor: '#e0f7fa',
   },
-  tabsText: {
+  tab: {
     fontSize: 20,
     fontWeight: 'bold',
+    paddingVertical: 10,
     color: 'black',
   },
-})
+  activeTab: {
+    color: 'blue',
+  },
+});
+
+export default Tabs;

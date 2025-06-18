@@ -11,10 +11,12 @@ import Tabs from "./Components/Tabs";
 import ResetPassword from "./Components/ResetPassword";
 import GroupInfo from "./Components/GroupInfo";
 import Members from "./Components/Members";
+import AdminUsersScreen from "./Components/AdminUsersScreen";
+import UsersInfo from "./Components/UsersInfo";
+import ManagePanel from "./Components/ManagePanel";
 
 const Stack = createStackNavigator();
 
-// Custom header component
 function CustomHeader() {
   return (
     <View style={styles.header}>
@@ -31,7 +33,7 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Welcome"
             screenOptions={({ route }) => ({
-              header: () => route.name !== "Tabs"  && route.name !== "GroupInfo" && route.name !== "Members" && <CustomHeader />,
+              header: () => route.name !== "Tabs"  && route.name !== "GroupInfo" && route.name !== "Members" && route.name !== "AdminUsersScreen" && <CustomHeader />,
             })}
           >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -41,6 +43,10 @@ export default function App() {
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
             <Stack.Screen name="GroupInfo" component={GroupInfo} />
             <Stack.Screen name="Members" component={Members} />
+            <Stack.Screen name="ManagePanel" component={ManagePanel} />
+            <Stack.Screen name="UsersInfo" component={UsersInfo} />
+            <Stack.Screen name="AdminUsersScreen" component={AdminUsersScreen} />
+
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

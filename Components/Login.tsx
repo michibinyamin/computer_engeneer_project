@@ -1,251 +1,132 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert
+} from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
-const Login = ({
-  navigation,
-}: {
-  navigation: { navigate: (screen: string) => void; goBack: () => void };
-}) => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+const Login = ({ navigation }: { navigation: { navigate: (screen: string) => void } }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleSubmit = async () => {
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+
     try {
-      if (!formData.email.trim() || !formData.password.trim()) {
-        alert("Please fill in all fields.");
+      // Get user data from Firestore
+      const usersRef = collection(db, 'users');
+      const userQuery = query(usersRef, where('email', '==', email));
+      const snapshot = await getDocs(userQuery);
+
+      if (snapshot.empty) {
+        Alert.alert('Error', 'User not found');
         return;
       }
 
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      console.log("User logged in:", userCredential.user);
-      navigation.navigate("Tabs");
+      const userData = snapshot.docs[0].data();
+      const userStatus = userData.status;
+
+      if (!userStatus || userStatus !== 'active') {
+        Alert.alert('Access Denied', `Your account is ${userStatus || 'unavailable'}.`);
+        return;
+      }
+
+      // Sign in with Firebase Auth
+      await signInWithEmailAndPassword(auth, email, password);
+
+      Alert.alert('Success', `Welcome back, ${userData.username}!`);
+      navigation.navigate('Tabs'); // or your home screen
+
     } catch (error: any) {
-      console.error("Login error:", error);
-      alert(error.message);
+      console.error('Login Error:', error.message);
+      Alert.alert('Login Error', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>Login to RecoMate</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
-        value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
+        autoCapitalize="none"
+        value={password}
+        onChangeText={setPassword}
       />
 
-      <TouchableOpacity onPress={() => navigation.navigate("ResetPassword")}>
-        <Text style={styles.forgotPasswordLink}> Forgot password? </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.signupText}>
-          Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.switchText}>
+          Don't have an account? <Text style={styles.link}>Sign Up</Text>
         </Text>
       </TouchableOpacity>
 
-      {/* SOCIAL LOGINS (disabled for now) */}
-
-      {/*
-      <View style={styles.orContainer}>
-        <View style={styles.line} />
-        <Text style={styles.orText}>Or</Text>
-        <View style={styles.line} />
-      </View>
-
-      <TouchableOpacity>
-        <View style={styles.facebookContainer}>
-          <Image
-            source={require('../assets/facebook.png')}
-            style={styles.facebookLogo}
-          />
-          <Text style={styles.facebookText}> Login with Facebook </Text>
-        </View>
+      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
+        <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => promptAsync()}>
-        <View style={styles.googleContainer}>
-          <Image
-            source={require('../assets/google.png')}
-            style={styles.googleLogo}
-          />
-          <Text style={styles.GoogleText}> Login with Google </Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity>
-        <View style={styles.appleContainer}>
-          <Image
-            source={require('../assets/apple.png')}
-            style={styles.appleLogo}
-          />
-          <Text style={styles.appleText}> Login with Apple </Text>
-        </View>
-      </TouchableOpacity>
-      */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    padding: 20,
+    paddingTop: 40,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "darkblue",
-    textAlign: "center",
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'darkblue',
+    textAlign: 'center',
+    marginBottom: 25,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 15,
+    borderColor: '#ccc',
+    paddingHorizontal: 15,
     marginBottom: 15,
+    borderRadius: 8,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "darkblue",
+    backgroundColor: 'darkblue',
     padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
   },
   buttonText: {
-    color: "white",
+    color: 'white',
     fontSize: 18,
-    fontWeight: "bold",
   },
-  signupText: {
-    textAlign: "center",
-    marginTop: 15,
-    fontSize: 16,
-    color: "#666",
-  },
-  signupLink: {
-    color: "darkblue",
-    fontWeight: "bold",
-  },
-  forgotPasswordLink: {
-    color: "darkblue",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-
-  // --- Disabled social login styles below ---
-
-  /*
-  orContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ccc',
-  },
-  orText: {
-    marginHorizontal: 10,
-    color: '#666',
-    fontSize: 16,
-    paddingHorizontal: 5,
-  },
-  facebookContainer: {
-    backgroundColor: '#1877F2',
-    alignItems: 'flex-start',
-    borderRadius: 10,
-    flexDirection: 'row',
-    padding: 5,
-    marginTop: 20,
-  },
-  facebookLogo: {
-    width: 50,
-    height: 50,
-  },
-  facebookText: {
+  switchText: {
     textAlign: 'center',
-    color: 'white',
     fontSize: 16,
+    color: '#555',
+  },
+  link: {
+    color: 'darkblue',
     fontWeight: 'bold',
-    padding: 12,
-    marginLeft: 55,
   },
-  googleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    padding: 6,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  googleLogo: {
-    width: 45,
-    height: 45,
-  },
-  GoogleText: {
-    textAlign: 'center',
-    color: 'gray',
-    fontSize: 16,
-    fontWeight: 'bold',
-    padding: 12,
-    marginLeft: 55,
-  },
-  appleText: {
-    textAlign: 'center',
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    padding: 1,
-    marginLeft: 55,
-  },
-  appleLogo: {
-    width: 60,
-    height: 55,
-  },
-  appleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'black',
-    padding: 5,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  */
 });
 
 export default Login;

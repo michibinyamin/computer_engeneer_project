@@ -76,11 +76,11 @@ const GroupsList = () => {
             placeholder="Description (optional)"
             value={groupDesc}
             onChangeText={setGroupDesc}
+              onPress={create_Group}
           />
           <View style={styles.buttonRow}>
             <Pressable
               style={styles.createButton}
-              onPress={create_Group}
               testID="create-button"
             >
               <Text style={styles.createButtonText}>Create</Text>

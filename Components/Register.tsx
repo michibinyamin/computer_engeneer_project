@@ -4,7 +4,6 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 
-
 const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => void } }) => {
   const [formData, setFormData] = useState({
     username: '',
@@ -13,7 +12,7 @@ const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => vo
     confirmPassword: ''
   });
 
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     try {
       const userRef = collection(db, "users");
       const usernameQuery = query(userRef, where("username", "==", formData.username));
@@ -24,25 +23,23 @@ const handleSubmit = async () => {
         return emailRegex.test(email);
       };
 
-      //later
-      const strongePasswordChecker = () => {};
       if (
-          !formData.username.trim() ||
-          !formData.email.trim() ||
-          !formData.password.trim() ||
-          !formData.confirmPassword.trim()
+        !formData.username.trim() ||
+        !formData.email.trim() ||
+        !formData.password.trim() ||
+        !formData.confirmPassword.trim()
       ) {
-          alert("Please fill in all fields.");
-          return;
-        }
-
-      if (!querySnapshot.empty) {
-        alert("Username already taken, Choose another one.");
+        alert("Please fill in all fields.");
         return;
       }
 
       if (!isValidEmail(formData.email)) {
         alert("Invalid Email, Please enter a valid email address.");
+        return;
+      }
+
+      if (!querySnapshot.empty) {
+        alert("Username already taken, Choose another one.");
         return;
       }
 
@@ -58,58 +55,60 @@ const handleSubmit = async () => {
       );
 
       const user = userCredential.user;
+
       await setDoc(doc(db, "users", user.uid), {
         user_id: user.uid,
         username: formData.username,
         email: formData.email,
-      }); 
+        status: "active" // New field added
+      });
 
       alert(`Account created successfully!\nWelcome, ${formData.username}`);
       navigation.navigate('Login');
 
     } catch (error) {
       console.error("Registration error:", error);
-      alert(error);
+      alert("Error: " + (error as Error).message);
     }
-};
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Join RecoMate</Text>
-      
-      <TextInput     
+
+      <TextInput
         style={styles.input}
         placeholder="Username"
         value={formData.username}
-        onChangeText={(text) => setFormData({...formData, username: text})}
+        onChangeText={(text) => setFormData({ ...formData, username: text })}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
         value={formData.email}
-        onChangeText={(text) => setFormData({...formData, email: text})}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={formData.password}
-        onChangeText={(text) => setFormData({...formData, password: text})}
+        onChangeText={(text) => setFormData({ ...formData, password: text })}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
         secureTextEntry
         value={formData.confirmPassword}
-        onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+        onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
       />
 
-      <TouchableOpacity 
-        style={styles.button} 
+      <TouchableOpacity
+        style={styles.button}
         onPress={handleSubmit}
       >
         <Text style={styles.buttonText}>Create Account</Text>
@@ -127,14 +126,14 @@ const handleSubmit = async () => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingTop: 10, 
+    paddingTop: 10,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'darkblue',
     textAlign: 'center',
-    marginBottom: 20, 
+    marginBottom: 20,
   },
   input: {
     height: 50,
