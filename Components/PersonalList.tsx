@@ -1,10 +1,14 @@
 import React from 'react';
 import Catagorys from './Catagorys';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { auth } from '../firebase';
 
 const PersonalList = () => {
+      const user = auth.currentUser;
       return (
-        <Catagorys />
+        <>
+          {user ? <Catagorys groupId={user.uid} /> : null}
+        </>
       );
 };
 

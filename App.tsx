@@ -14,6 +14,8 @@ import Members from "./Components/Members";
 import AdminUsersScreen from "./Components/AdminUsersScreen";
 import UsersInfo from "./Components/UsersInfo";
 import ManagePanel from "./Components/ManagePanel";
+import Catagorys from "./Components/Catagorys";
+import Recommendation from "./Components/Recommendation";
 
 const Stack = createStackNavigator();
 
@@ -33,7 +35,7 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Welcome"
             screenOptions={({ route }) => ({
-              header: () => route.name !== "Tabs"  && route.name !== "GroupInfo" && route.name !== "Members" && route.name !== "AdminUsersScreen" && <CustomHeader />,
+              header: () => route.name !== "Tabs" && route.name !== "RecommendationList"  && route.name !== "Catagorys" && route.name !== "Members" && route.name !== "AdminUsersScreen" && <CustomHeader />,
             })}
           >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -41,7 +43,9 @@ export default function App() {
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Tabs" component={Tabs} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
-            <Stack.Screen name="GroupInfo" component={GroupInfo} />
+            <Stack.Screen name="Recommendation" component={Recommendation} />
+            {/* <Stack.Screen name="GroupInfo" component={GroupInfo} /> */}
+            {/* <Stack.Screen name="Catagorys" component={Catagorys} /> */}
             <Stack.Screen name="Members" component={Members} />
             <Stack.Screen name="ManagePanel" component={ManagePanel} />
             <Stack.Screen name="UsersInfo" component={UsersInfo} />

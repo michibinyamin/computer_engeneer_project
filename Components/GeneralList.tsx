@@ -4,10 +4,9 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 const GeneralList = () => {
   return (
-    <ScrollView>
-      <Catagorys group_id={"General"} />
-    </ScrollView>
-  
+    //<ScrollView>
+      <Catagorys groupId={"General"} />
+    //</ScrollView>
 );
 };
 

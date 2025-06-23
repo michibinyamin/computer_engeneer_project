@@ -13,16 +13,17 @@ import { auth } from '../firebase';
 import { fetchGroups, createGroup } from '../Services';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Catagorys from './Catagorys';
 
 const GroupsList = () => {
   const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDesc, setGroupDesc] = useState('');
+  const [groupEntered, setGroupEntered] = useState(''); // Id will be here
 
-  const navigation = useNavigation<any>();
-
-  useEffect(() => {
+    const navigation = useNavigation<any>();
+    useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
       loadGroups();
     });
@@ -52,7 +53,7 @@ const GroupsList = () => {
         <TouchableOpacity
           key={index}
           style={styles.groupCard}
-          onPress={() => navigation.navigate('GroupInfo', { groupId: group.id })}
+          onPress={() => setGroupEntered(group.id)}
         >
           <Text style={styles.groupName}>{group.name}</Text>
         </TouchableOpacity>
@@ -99,6 +100,9 @@ const GroupsList = () => {
   );
 
   return (
+    groupEntered ? (
+      <Catagorys groupId={groupEntered} />
+    ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Your Groups</Text>
       {renderGroupList()}
@@ -113,7 +117,9 @@ const GroupsList = () => {
 
       {renderCreateGroupModal()}
     </View>
-  );
+  )
+
+);
 };
 
 const styles = StyleSheet.create({

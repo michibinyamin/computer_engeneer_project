@@ -67,4 +67,16 @@ export const addMembership = async (inviteUsername : string, group_id: string) =
       .map(doc => doc.data().name);
 
     return groupCategories;
-  }
+  };
+
+  // Fetches recomendations froma a group
+  export const fetchRecommendations = async (category_id: string | undefined) => {
+    if (!category_id) return [];
+
+      const categoriesSnap = await getDocs(collection(db, 'recommendations'));
+      const recomendations = categoriesSnap.docs
+        .filter(doc => doc.data().category_id === category_id)
+        .map(doc => ({ title: doc.data().title, content: doc.data().content}));
+
+      return recomendations;
+  };

@@ -5,10 +5,13 @@ import GroupsList from './GroupsList';
 import PersonalList from './PersonalList';
 import { auth } from '../firebase';
 import ManagePanel from './ManagePanel'; // this will be your admin page
+import GroupInfo from './GroupInfo';
+import { useNavigation } from '@react-navigation/native';
 
 const adminEmails = ['omar@gmail.com', 'Adi.yohanann@gmail.com','michibinyamin@gmail.com']; // Add your admin email(s)
 
 const Tabs = () => {
+  const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState('General');
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -26,7 +29,9 @@ const Tabs = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'General':
+        //() => navigation.navigate('Catagorys', { groupId: "General" })
         return <GeneralList />;
+        //return <GroupInfo />;
       case 'Groups':
         return <GroupsList />;
       case 'Personal':
