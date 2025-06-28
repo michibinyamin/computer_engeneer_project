@@ -60,7 +60,7 @@ const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => vo
         user_id: user.uid,
         username: formData.username,
         email: formData.email,
-        status: "active" // New field added
+        status: "active"
       });
 
       alert(`Account created successfully!\nWelcome, ${formData.username}`);

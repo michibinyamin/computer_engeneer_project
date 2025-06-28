@@ -5,7 +5,6 @@ import GroupsList from './GroupsList';
 import PersonalList from './PersonalList';
 import { auth } from '../firebase';
 import ManagePanel from './ManagePanel'; // this will be your admin page
-import GroupInfo from './GroupInfo';
 import { useNavigation } from '@react-navigation/native';
 
 const adminEmails = ['omar@gmail.com', 'Adi.yohanann@gmail.com','michibinyamin@gmail.com']; // Add your admin email(s)

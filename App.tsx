@@ -9,12 +9,10 @@ import { NavigationContainer } from "@react-navigation/native";
 import WelcomeScreen from "./Components/WelcomeScreen";
 import Tabs from "./Components/Tabs";
 import ResetPassword from "./Components/ResetPassword";
-import GroupInfo from "./Components/GroupInfo";
 import Members from "./Components/Members";
 import AdminUsersScreen from "./Components/AdminUsersScreen";
 import UsersInfo from "./Components/UsersInfo";
 import ManagePanel from "./Components/ManagePanel";
-import Catagorys from "./Components/Catagorys";
 import Recommendation from "./Components/Recommendation";
 
 const Stack = createStackNavigator();
