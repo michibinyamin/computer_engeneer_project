@@ -101,7 +101,7 @@ const GroupsList = () => {
 
   return (
     groupEntered ? (
-      <Catagorys groupId={groupEntered} />
+      <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
     ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Your Groups</Text>

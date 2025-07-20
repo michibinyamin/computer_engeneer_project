@@ -1,4 +1,4 @@
-import { addDoc, collection, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
 // Fetches group names for a user
@@ -76,7 +76,67 @@ export const addMembership = async (inviteUsername : string, group_id: string) =
       const categoriesSnap = await getDocs(collection(db, 'recommendations'));
       const recomendations = categoriesSnap.docs
         .filter(doc => doc.data().category_id === category_id)
-        .map(doc => ({ title: doc.data().title, content: doc.data().content}));
+        .map(doc => ({
+          recoId: doc.id,
+          title: doc.data().title,
+          content: doc.data().content,
+          imageUrl: doc.data().imageUrl,
+          color: doc.data().color, // Default color if not set
+        }));
 
       return recomendations;
   };
+
+export const addRecommendation = async (
+  category_id: string,
+  title: string,
+  content: string,
+  imageUrl?: string,
+  color?: string
+): Promise<string | undefined> => {
+  if (!title.trim() || !category_id) return;
+
+  try {
+    const docRef = await addDoc(collection(db, 'recommendations'), {
+      title,
+      content,
+      category_id,
+      created_by: auth.currentUser?.uid,
+      imageUrl: imageUrl || '',
+      color: color || '#ff6f00',
+    });
+    return docRef.id; // Return the new document ID
+  } catch (error) {
+    console.error('Add recommendation failed:', error);
+    alert('Failed to add recommendation');
+  }
+};
+
+
+export const updateRecommendation = async (recommendationId: string, title: string, content: string, imageUrl?: string, color?: string) => {
+  if (!title.trim() || !content.trim() || !recommendationId) return;
+
+  try {
+    const recommendationRef = doc(db, 'recommendations', recommendationId);
+    await setDoc(recommendationRef, {
+      title,
+      content,
+      imageUrl: imageUrl || '',
+      color: color || '#ff6f00', // Default color if not set
+    }, { merge: true });
+  } catch (error) {
+    console.error('Update recommendation failed:', error);
+    alert('Failed to update recommendation');
+  }
+}
+
+export const deleteRecommendation = async (recommendationId: string) => {
+  if (!recommendationId) return;
+
+  try {
+    await deleteDoc(doc(db, 'recommendations', recommendationId));
+  } catch (error) {
+    console.error('Delete recommendation failed:', error);
+    alert('Failed to delete recommendation');
+  }
+};

@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const adminEmails = ['omar@gmail.com', 'Adi.yohanann@gmail.com','michibinyamin@gmail.com']; // Add your admin email(s)
 
-const Tabs = () => {
+const MainContainer = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState('General');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Tabs;
+export default MainContainer;

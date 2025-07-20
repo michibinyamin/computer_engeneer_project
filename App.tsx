@@ -7,13 +7,14 @@ import Login from "./Components/Login";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 import WelcomeScreen from "./Components/WelcomeScreen";
-import Tabs from "./Components/Tabs";
+import MainContainer from "./Components/MainContainer";
 import ResetPassword from "./Components/ResetPassword";
 import Members from "./Components/Members";
 import AdminUsersScreen from "./Components/AdminUsersScreen";
 import UsersInfo from "./Components/UsersInfo";
 import ManagePanel from "./Components/ManagePanel";
 import Recommendation from "./Components/Recommendation";
+import EditableRecommendation from "./Components/EditableRecommendation";
 
 const Stack = createStackNavigator();
 
@@ -33,15 +34,16 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Welcome"
             screenOptions={({ route }) => ({
-              header: () => route.name !== "Tabs" && route.name !== "RecommendationList"  && route.name !== "Catagorys" && route.name !== "Members" && route.name !== "AdminUsersScreen" && <CustomHeader />,
+              header: () => route.name !== "Tabs" && route.name !== "EditableRecommendation" && route.name !== "Members" && route.name !== "AdminUsersScreen" && <CustomHeader />,
             })}
           >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Tabs" component={Tabs} />
+            <Stack.Screen name="Tabs" component={MainContainer} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
-            <Stack.Screen name="Recommendation" component={Recommendation} />
+            {/* <Stack.Screen name="Recommendation" component={Recommendation} /> */}
+            <Stack.Screen name="EditableRecommendation" component={EditableRecommendation} />
             {/* <Stack.Screen name="GroupInfo" component={GroupInfo} /> */}
             {/* <Stack.Screen name="Catagorys" component={Catagorys} /> */}
             <Stack.Screen name="Members" component={Members} />

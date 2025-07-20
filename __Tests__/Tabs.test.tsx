@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import Tabs from '../Components/Tabs';
+import Tabs from '../Components/MainContainer';
 import { NavigationContainer } from '@react-navigation/native';
 
 // Mock subcomponents

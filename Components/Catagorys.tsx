@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  BackHandler,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { db } from "../firebase";
@@ -26,7 +27,7 @@ import RecommendationList from "./RecommendationList";
 
 const randomColors = ["#ff9999", "#99ccff", "#ccffcc", "#ffcc99", "#e6ccff", "#c2f0c2"];
 
-const Catagorys = ({ groupId }: { groupId: any }) => {
+const Catagorys = ({ groupId, setGroupEntered }: { groupId: any, setGroupEntered: (id: string) => void }) => {
   //const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art']; // Example options
   const navigation = useNavigation();
   // const route = useRoute();
@@ -95,15 +96,14 @@ const Catagorys = ({ groupId }: { groupId: any }) => {
 
   return (
     CatEntered ? (
-          <RecommendationList category_id={CatEntered} />
+          <RecommendationList category_id={CatEntered} setCatEntered={setCatEntered} />
         ) : (
           <View style={styles.container}>
             {IsGroup && (
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-              </TouchableOpacity>
-
               <Text style={styles.centeredGroupName}>{groupName}</Text>
+              <TouchableOpacity onPress={() => setGroupEntered("")}><Ionicons name="arrow-back" size={24} color="black" /></TouchableOpacity>
+
                 <TouchableOpacity
                 style={styles.membersButton}
                 onPress={() => navigation.navigate("Members" , { groupId })}
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+    backgroundColor: "white",
     position: "relative",
   },
   centeredGroupName: {
