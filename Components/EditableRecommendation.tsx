@@ -175,9 +175,11 @@ const EditableRecommendation = () => {
             style={styles.image}
             resizeMode="contain"
           />
-        ) : null}
+        ) : (
+          Mode === 'view' && <View style={{ height: 120 }} />
+        )}
         {Mode !== 'view' ? (
-          <View style={{ marginTop: 10, marginBottom: 50 }}>
+          <View style={{ marginTop: 0, marginBottom: 80 }}>
             <Text style={{ fontWeight: 'bold' }}>Choose a color:</Text>
             <View style={styles.colorPickerRow}>
               {COLORS.map((color) => (
@@ -200,7 +202,7 @@ const EditableRecommendation = () => {
         <View
           style={{
             position: 'absolute',
-            bottom: 30,
+            bottom: 40,
             width: '100%',
             alignItems: 'center',
             flexDirection: 'row',
@@ -233,14 +235,13 @@ const EditableRecommendation = () => {
             position: 'absolute',
             bottom: 100,
             width: '100%',
-            alignItems: 'center',
-            flexDirection: 'row',
-            justifyContent: Mode === 'new' ? 'center' : 'space-between',
+            //alignItems: 'center',
             paddingHorizontal: 20,
           }}
         >
-          <Text style={{ color: '#dbeafe', textAlign: 'left' }}>
-            {Mode === 'view' && 'Created by: ' + usernameCreator}
+          <Text style={{ color: 'black', fontSize: 16, fontFamily: 'serif' }}>
+            {Mode === 'view' &&
+              'Created by: ' + usernameCreator + '\n' + 'Rating: '}
           </Text>
         </View>
       </ScrollView>
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     //backgroundColor: '#fff',
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 24,
-    padding: 28,
+    padding: 15,
     margin: 20,
     shadowColor: '#00000020',
     shadowOffset: { width: 0, height: 10 },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 16,
-    marginBottom: 110,
+    marginBottom: 140,
     marginTop: 20,
   },
   title: {
