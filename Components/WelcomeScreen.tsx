@@ -1,37 +1,42 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react'
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native'
 
-;
-const WelcomeScreen = ({ navigation }: { navigation: { navigate: (arg0: string) => void } })  => {
+const WelcomeScreen = ({
+  navigation,
+}: {
+  navigation: { navigate: (arg0: string) => void }
+}) => {
   return (
     <View style={styles.container}>
-      <Image 
-        source={require('../assets/Logo.png')} 
-        style={styles.logo}
-      />
+      <Image source={require('../assets/Logo.png')} style={styles.logo} />
       <Text style={styles.title}>Welcome to RecoMate</Text>
-      
+
       <View style={styles.featuresContainer}>
-        <Text style={styles.feature}>🌟 Discover personalized recommendations</Text>
-        <Text style={styles.feature}>👥 From real people in your community</Text>
+        <Text style={styles.feature}>
+          🌟 Discover personalized recommendations
+        </Text>
+        <Text style={styles.feature}>
+          👥 From real people in your community
+        </Text>
         <Text style={styles.feature}>🔍 Find hidden gems you'll love</Text>
         <Text style={styles.feature}>💬 Share your own favorites</Text>
       </View>
 
       <Text style={styles.description}>
-        RecoMate connects you with authentic recommendations from people who share your interests. 
-        No algorithms, just real suggestions from real users.
+        RecoMate connects you with authentic recommendations from people who
+        share your interests. No algorithms, just real suggestions from real
+        users.
       </Text>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate('Register')}
       >
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -79,6 +84,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-});
+})
 
-export default WelcomeScreen;
+export default WelcomeScreen

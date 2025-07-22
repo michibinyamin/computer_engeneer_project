@@ -1,13 +1,9 @@
-import React from 'react';
-import Catagorys from './Catagorys';
-import { ScrollView } from 'react-native-gesture-handler';
+import React from 'react'
+import Catagorys from './Catagorys'
+import { ScrollView } from 'react-native-gesture-handler'
 
 const GeneralList = () => {
-  return (
-    //<ScrollView>
-      <Catagorys groupId={"General"} />
-    //</ScrollView>
-);
-};
+  return <Catagorys groupId={'General'} />
+}
 
-export default GeneralList;
+export default GeneralList

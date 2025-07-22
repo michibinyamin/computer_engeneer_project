@@ -1,27 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebase";
-import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import React, { useState } from 'react'
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth, db } from '../firebase'
+import {
+  doc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore'
 
-const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => void } }) => {
+const Register = ({
+  navigation,
+}: {
+  navigation: { navigate: (arg0: string) => void }
+}) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
-  });
+    confirmPassword: '',
+  })
 
   const handleSubmit = async () => {
     try {
-      const userRef = collection(db, "users");
-      const usernameQuery = query(userRef, where("username", "==", formData.username));
-      const querySnapshot = await getDocs(usernameQuery);
+      const userRef = collection(db, 'users')
+      const usernameQuery = query(
+        userRef,
+        where('username', '==', formData.username),
+      )
+      const querySnapshot = await getDocs(usernameQuery)
 
       const isValidEmail = (email: string): boolean => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-      };
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(email)
+      }
 
       if (
         !formData.username.trim() ||
@@ -29,48 +49,47 @@ const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => vo
         !formData.password.trim() ||
         !formData.confirmPassword.trim()
       ) {
-        alert("Please fill in all fields.");
-        return;
+        alert('Please fill in all fields.')
+        return
       }
 
       if (!isValidEmail(formData.email)) {
-        alert("Invalid Email, Please enter a valid email address.");
-        return;
+        alert('Invalid Email, Please enter a valid email address.')
+        return
       }
 
       if (!querySnapshot.empty) {
-        alert("Username already taken, Choose another one.");
-        return;
+        alert('Username already taken, Choose another one.')
+        return
       }
 
       if (formData.password !== formData.confirmPassword) {
-        alert("Passwords don't match");
-        return;
+        alert("Passwords don't match")
+        return
       }
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
-        formData.password
-      );
+        formData.password,
+      )
 
-      const user = userCredential.user;
+      const user = userCredential.user
 
-      await setDoc(doc(db, "users", user.uid), {
+      await setDoc(doc(db, 'users', user.uid), {
         user_id: user.uid,
         username: formData.username,
         email: formData.email,
-        status: "active"
-      });
+        status: 'active',
+      })
 
-      alert(`Account created successfully!\nWelcome, ${formData.username}`);
-      navigation.navigate('Login');
-
+      alert(`Account created successfully!\nWelcome, ${formData.username}`)
+      navigation.navigate('Login')
     } catch (error) {
-      console.error("Registration error:", error);
-      alert("Error: " + (error as Error).message);
+      console.error('Registration error:', error)
+      alert('Error: ' + (error as Error).message)
     }
-  };
+  }
 
   return (
     <View style={styles.container}>
@@ -104,13 +123,12 @@ const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => vo
         placeholder="Confirm Password"
         secureTextEntry
         value={formData.confirmPassword}
-        onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+        onChangeText={(text) =>
+          setFormData({ ...formData, confirmPassword: text })
+        }
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Create Account</Text>
       </TouchableOpacity>
 
@@ -120,8 +138,8 @@ const Register = ({ navigation }: { navigation: { navigate: (arg0: string) => vo
         </Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -166,6 +184,6 @@ const styles = StyleSheet.create({
     color: 'darkblue',
     fontWeight: 'bold',
   },
-});
+})
 
-export default Register;
+export default Register

@@ -1,13 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 
 const ManagePanel = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<any>()
 
   const goToUsersInfo = () => {
-    navigation.navigate('UsersInfo');
-  };
+    navigation.navigate('UsersInfo')
+  }
 
   return (
     <View style={styles.container}>
@@ -17,13 +17,13 @@ const ManagePanel = () => {
         <Text style={styles.buttonText}>Manage Users</Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: 'white',
+    //backgroundColor: 'white',
     flex: 1,
   },
   header: {
@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
+    color: '#dbeafe',
   },
   button: {
     backgroundColor: 'darkblue',
@@ -44,6 +45,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
+})
 
-export default ManagePanel;
+export default ManagePanel

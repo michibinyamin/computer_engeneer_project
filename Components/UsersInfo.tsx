@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -6,32 +6,31 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-} from 'react-native';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
+} from 'react-native'
+import { db } from '../firebase'
+import { collection, getDocs } from 'firebase/firestore'
+import { useNavigation } from '@react-navigation/native'
+import { fetchUsers } from '../Services'
 
 const UsersInfo = () => {
-  const [users, setUsers] = useState<{ id: string; username: string; email: string }[]>([]);
-  const [search, setSearch] = useState('');
-  const navigation = useNavigation<any>();
+  const [users, setUsers] = useState<
+    { id: string; username: string; email: string }[]
+  >([])
+  const [search, setSearch] = useState('')
+  const navigation = useNavigation<any>()
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const snapshot = await getDocs(collection(db, 'users'));
-      const fetched = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as any;
-      setUsers(fetched);
-    };
+    const fetchData = async () => {
+      const fetched = await fetchUsers()
+      setUsers(fetched)
+    }
 
-    fetchUsers();
-  }, []);
+    fetchData()
+  }, [])
 
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) =>
+    user.username.toLowerCase().includes(search.toLowerCase()),
+  )
 
   return (
     <View style={styles.container}>
@@ -43,19 +42,21 @@ const UsersInfo = () => {
         onChangeText={setSearch}
       />
       <ScrollView contentContainerStyle={styles.list}>
-        {filteredUsers.map(user => (
+        {filteredUsers.map((user) => (
           <TouchableOpacity
             key={user.id}
             style={styles.userBtn}
-            onPress={() => navigation.navigate('AdminUsersScreen', { userId: user.id })}
+            onPress={() =>
+              navigation.navigate('AdminUsersScreen', { userId: user.id })
+            }
           >
             <Text style={styles.userText}>{user.username || user.email}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -90,6 +91,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
+})
 
-export default UsersInfo;
+export default UsersInfo

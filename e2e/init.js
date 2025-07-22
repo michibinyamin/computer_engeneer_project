@@ -1,10 +1,10 @@
-import { init, cleanup } from 'detox';
-import config from '../detox.config';
+import { init, cleanup } from 'detox'
+import config from '../detox.config'
 
 beforeAll(async () => {
-  await init(config);
-});
+  await init(config)
+})
 
 afterAll(async () => {
-  await cleanup();
-});
+  await cleanup()
+})

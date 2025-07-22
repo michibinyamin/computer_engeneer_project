@@ -1,51 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert
-} from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth, db } from '../firebase'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 
-const Login = ({ navigation }: { navigation: { navigate: (screen: string) => void } }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const Login = ({
+  navigation,
+}: {
+  navigation: { navigate: (screen: string) => void }
+}) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both email and password.');
-      return;
+      Alert.alert('Error', 'Please enter both email and password.')
+      return
     }
 
     try {
       // Get user data from Firestore
-      const usersRef = collection(db, 'users');
-      const userQuery = query(usersRef, where('email', '==', email));
-      const snapshot = await getDocs(userQuery);
+      const usersRef = collection(db, 'users')
+      const userQuery = query(usersRef, where('email', '==', email))
+      const snapshot = await getDocs(userQuery)
 
       if (snapshot.empty) {
-        Alert.alert('Error', 'User not found');
-        return;
+        Alert.alert('Error', 'User not found')
+        return
       }
 
-      const userData = snapshot.docs[0].data();
-      const userStatus = userData.status;
+      const userData = snapshot.docs[0].data()
+      const userStatus = userData.status
 
       if (!userStatus || userStatus !== 'active') {
-        Alert.alert('Access Denied', `Your account is ${userStatus || 'unavailable'}.`);
-        return;
+        Alert.alert(
+          'Access Denied',
+          `Your account is ${userStatus || 'unavailable'}.`,
+        )
+        return
       }
 
       // Sign in with Firebase Auth
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password)
 
-      Alert.alert('Success', `Welcome back, ${userData.username}!`);
-      navigation.navigate('Tabs'); // or your home screen
-
+      Alert.alert('Success', `Welcome back, ${userData.username}!`)
+      navigation.navigate('Tabs') // or your home screen
     } catch (error: any) {
-      console.error('Login Error:', error.message);
-      Alert.alert('Login Error', error.message);
+      console.error('Login Error:', error.message)
+      Alert.alert('Login Error', error.message)
     }
-  };
+  }
 
   return (
     <View style={styles.container}>
@@ -83,8 +94,8 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
         <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -127,6 +138,6 @@ const styles = StyleSheet.create({
     color: 'darkblue',
     fontWeight: 'bold',
   },
-});
+})
 
-export default Login;
+export default Login

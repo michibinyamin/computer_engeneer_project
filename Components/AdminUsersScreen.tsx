@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -6,38 +6,38 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-} from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { db } from '../firebase';
+} from 'react-native'
+import { useRoute, useNavigation } from '@react-navigation/native'
+import { db } from '../firebase'
 import {
   doc,
   getDoc,
   deleteDoc,
   updateDoc,
   Timestamp,
-} from 'firebase/firestore';
+} from 'firebase/firestore'
 
 const AdminUsersScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { userId } = route.params as { userId: string };
+  const route = useRoute()
+  const navigation = useNavigation()
+  const { userId } = route.params as { userId: string }
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const docRef = doc(db, 'users', userId);
-        const docSnap = await getDoc(docRef);
+        const docRef = doc(db, 'users', userId)
+        const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
-          setUser(docSnap.data());
+          setUser(docSnap.data())
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        console.error('Error fetching user:', error)
       }
-    };
-    fetchUser();
-  }, [userId]);
+    }
+    fetchUser()
+  }, [userId])
 
   const handleBan = async () => {
     Alert.alert('Confirm Ban', 'Ban this user temporarily?', [
@@ -46,26 +46,26 @@ const AdminUsersScreen = () => {
         text: 'Ban',
         style: 'destructive',
         onPress: async () => {
-          const bannedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+          const bannedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
           try {
             await updateDoc(doc(db, 'users', userId), {
               bannedUntil,
               status: 'banned',
-            });
+            })
             setUser((prev: any) => ({
               ...prev,
               bannedUntil: Timestamp.fromDate(bannedUntil),
               status: 'banned',
-            }));
-            Alert.alert('User banned for 7 days');
+            }))
+            Alert.alert('User banned for 7 days')
           } catch (error) {
-            Alert.alert('Error banning user');
-            console.error(error);
+            Alert.alert('Error banning user')
+            console.error(error)
           }
         },
       },
-    ]);
-  };
+    ])
+  }
 
   const handleDelete = async () => {
     Alert.alert(
@@ -78,30 +78,29 @@ const AdminUsersScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteDoc(doc(db, 'users', userId));
-              Alert.alert('User deleted');
-              navigation.goBack();
+              await deleteDoc(doc(db, 'users', userId))
+              Alert.alert('User deleted')
+              navigation.goBack()
             } catch (error) {
-              Alert.alert('Error deleting user');
-              console.error(error);
+              Alert.alert('Error deleting user')
+              console.error(error)
             }
           },
         },
-      ]
-    );
-  };
+      ],
+    )
+  }
 
   const formatBanDate = (timestamp?: Timestamp) => {
-    if (!timestamp) return null;
-    const date = timestamp.toDate();
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
+    if (!timestamp) return null
+    const date = timestamp.toDate()
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+  }
 
   const isBanned =
-    user?.bannedUntil &&
-    new Date(user.bannedUntil.toDate()) > new Date();
+    user?.bannedUntil && new Date(user.bannedUntil.toDate()) > new Date()
 
-  if (!user) return <Text style={styles.loading}>Loading...</Text>;
+  if (!user) return <Text style={styles.loading}>Loading...</Text>
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -140,8 +139,8 @@ const AdminUsersScreen = () => {
         <Text style={styles.actionText}>Delete User</Text>
       </TouchableOpacity>
     </ScrollView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -184,6 +183,6 @@ const styles = StyleSheet.create({
   deleteBtn: {
     backgroundColor: 'red',
   },
-});
+})
 
-export default AdminUsersScreen;
+export default AdminUsersScreen

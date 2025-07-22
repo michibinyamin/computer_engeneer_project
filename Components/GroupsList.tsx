@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   StyleSheet,
   Text,
@@ -8,44 +8,44 @@ import {
   Modal,
   Pressable,
   ScrollView,
-} from 'react-native';
-import { auth } from '../firebase';
-import { fetchGroups, createGroup } from '../Services';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import Catagorys from './Catagorys';
+} from 'react-native'
+import { auth } from '../firebase'
+import { fetchGroups, createGroup } from '../Services'
+import { useNavigation } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
+import Catagorys from './Catagorys'
 
 const GroupsList = () => {
-  const [options, setOptions] = useState<{ id: string; name: string }[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [groupDesc, setGroupDesc] = useState('');
-  const [groupEntered, setGroupEntered] = useState(''); // Id will be here
+  const [options, setOptions] = useState<{ id: string; name: string }[]>([])
+  const [modalVisible, setModalVisible] = useState(false)
+  const [groupName, setGroupName] = useState('')
+  const [groupDesc, setGroupDesc] = useState('')
+  const [groupEntered, setGroupEntered] = useState('') // Id will be here
 
-    const navigation = useNavigation<any>();
-    useEffect(() => {
+  const navigation = useNavigation<any>()
+  useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
-      loadGroups();
-    });
-    return unsubscribe;
-  }, []);
+      loadGroups()
+    })
+    return unsubscribe
+  }, [])
 
   const loadGroups = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    const userGroups = await fetchGroups(user.uid);
-    setOptions(userGroups);
-  };
+    const user = auth.currentUser
+    if (!user) return
+    const userGroups = await fetchGroups(user.uid)
+    setOptions(userGroups)
+  }
 
   const create_Group = async () => {
-    const user = auth.currentUser;
-    if (!user || !groupName.trim()) return;
-    await createGroup(groupName, groupDesc, user.uid);
-    setModalVisible(false);
-    setGroupName('');
-    setGroupDesc('');
-    await loadGroups();
-  };
+    const user = auth.currentUser
+    if (!user || !groupName.trim()) return
+    await createGroup(groupName, groupDesc, user.uid)
+    setModalVisible(false)
+    setGroupName('')
+    setGroupDesc('')
+    await loadGroups()
+  }
 
   const renderGroupList = () => (
     <ScrollView contentContainerStyle={styles.groupListContainer}>
@@ -59,7 +59,7 @@ const GroupsList = () => {
         </TouchableOpacity>
       ))}
     </ScrollView>
-  );
+  )
 
   const renderCreateGroupModal = () => (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
@@ -77,13 +77,10 @@ const GroupsList = () => {
             placeholder="Description (optional)"
             value={groupDesc}
             onChangeText={setGroupDesc}
-              onPress={create_Group}
+            onPress={create_Group}
           />
           <View style={styles.buttonRow}>
-            <Pressable
-              style={styles.createButton}
-              testID="create-button"
-            >
+            <Pressable style={styles.createButton} testID="create-button">
               <Text style={styles.createButtonText}>Create</Text>
             </Pressable>
             <Pressable
@@ -97,12 +94,11 @@ const GroupsList = () => {
         </View>
       </View>
     </Modal>
-  );
+  )
 
-  return (
-    groupEntered ? (
-      <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
-    ) : (
+  return groupEntered ? (
+    <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
+  ) : (
     <View style={styles.container}>
       <Text style={styles.title}>Your Groups</Text>
       {renderGroupList()}
@@ -112,45 +108,60 @@ const GroupsList = () => {
         style={styles.fab}
         onPress={() => setModalVisible(true)}
       >
-        <Ionicons name="add-circle" size={60} color="darkblue" />
+        <Ionicons name="add-circle" size={60} color="#dbeafe" />
       </TouchableOpacity>
 
       {renderCreateGroupModal()}
     </View>
   )
-
-);
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f2f2f2',
+    //backgroundColor: '#f2f2f2',
+    //backgroundColor: '#0a0f2c',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 16,
-    color: 'black',
+    //color: 'black',
+    color: '#dbeafe', // light blue
   },
   groupListContainer: {
     padding: 20,
     gap: 12,
   },
+  // groupCard: {
+  //   backgroundColor: '#e0e0e0',
+  //   paddingVertical: 20,
+  //   paddingHorizontal: 25,
+  //   borderRadius: 12,
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   elevation: 3,
+  // },
   groupCard: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#1e3a8a', // deep blue
     paddingVertical: 20,
     paddingHorizontal: 25,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
   groupName: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: 'black',
+    //color: 'black',
+    color: '#f1f5f9', // soft white
   },
+
   fab: {
     position: 'absolute',
     top: 10,
@@ -206,6 +217,6 @@ const styles = StyleSheet.create({
     color: 'black',
     fontWeight: 'bold',
   },
-});
+})
 
-export default GroupsList;
+export default GroupsList

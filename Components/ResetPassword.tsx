@@ -1,36 +1,38 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../firebase';
-
+import React, { useState } from 'react'
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native'
+import { sendPasswordResetEmail } from 'firebase/auth'
+import { auth } from '../firebase'
 
 const ResetPassword = ({
   navigation,
 }: {
-  navigation: { navigate: (screen: string) => void; goBack: () => void };
+  navigation: { navigate: (screen: string) => void; goBack: () => void }
 }) => {
+  const [email, setEmail] = useState('')
 
-    const [email, setEmail] = useState('');
+  const handleReset = async () => {
+    if (!email.trim()) {
+      alert('Please enter your email.')
+      return
+    }
 
-    const handleReset = async () => {
-        if(!email.trim()){
-            alert('Please enter your email.');
-            return;
-        }
+    try {
+      await sendPasswordResetEmail(auth, email)
+      alert('Reset link sent! Check your inbox.')
+      navigation.goBack()
+    } catch (error) {
+      console.error('Reset password error:', error)
+      alert('Error: ' + error)
+    }
+  }
 
-        try {
-            
-            await sendPasswordResetEmail(auth, email);
-            alert('Reset link sent! Check your inbox.');
-            navigation.goBack();
-
-        } catch (error) {
-            console.error('Reset password error:', error);
-            alert('Error: ' + error);
-        }
-    };
-
-     return (
+  return (
     <View style={styles.container}>
       <Text style={styles.title}>Reset Password</Text>
 
@@ -50,8 +52,8 @@ const ResetPassword = ({
         <Text style={styles.backLink}>Back to Login</Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -92,6 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-});
+})
 
-export default ResetPassword;
+export default ResetPassword
