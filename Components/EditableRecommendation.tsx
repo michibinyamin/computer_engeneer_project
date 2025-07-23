@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Modal,
 } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -16,13 +17,17 @@ import {
   updateRecommendation,
   deleteRecommendation,
   fetchUserNameById,
-  fetchUserNameFromRecommendation,
+  addRating,
+  fetchRatingsByRecommendation,
+  fetchRatingsByRecommendationCount,
 } from '../Services'
 import { Ionicons } from '@expo/vector-icons'
 //import tinycolor from 'tinycolor2'
 import { deleteDoc } from 'firebase/firestore'
 import { ImageBackground } from 'react-native'
 import { auth } from '../firebase'
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry'
+import { log } from 'detox'
 
 const COLORS = [
   'black',
@@ -69,6 +74,9 @@ const EditableRecommendation = () => {
   //const [color, setColor] = useState(color);
   const [creatorId, setCreatorId] = useState(initialCreatedBy)
   const [usernameCreator, setUsernameCreator] = useState('')
+  const [showRating, setShowRating] = useState(false)
+  const [ratings, setRatings] = useState<string>('')
+  const [voterCount, setVoterCount] = useState(0)
 
   // i want to load the username of the creator of the recommendation
   useEffect(() => {
@@ -78,7 +86,45 @@ const EditableRecommendation = () => {
     }
 
     fetchCreatorUserName()
-  }, [])
+  }, [recoId])
+
+  useEffect(() => {
+    const fetchRatingByRecoId = async () => {
+      if (recoId) {
+        const rating = await fetchRatingsByRecommendation(recoId)
+        console.log('Rating for recommendation:', rating, recoId)
+        switch (Math.round(rating)) {
+          case 1:
+            setRatings('⭐')
+            break
+          case 2:
+            setRatings('⭐⭐')
+            break
+          case 3:
+            setRatings('⭐⭐⭐')
+            break
+          case 4:
+            setRatings('⭐⭐⭐⭐')
+            break
+          case 5:
+            setRatings('⭐⭐⭐⭐⭐')
+            break
+          default:
+            setRatings('No Rating')
+        }
+      }
+    }
+
+    const fetchVoterCount = async () => {
+      if (recoId) {
+        const count = await fetchRatingsByRecommendationCount(recoId)
+        setVoterCount(count)
+      }
+    }
+
+    fetchRatingByRecoId()
+    fetchVoterCount()
+  }, [showRating, recoId])
 
   //const brightColor = tinycolor(color).brighten(20).toHexString()
 
@@ -106,13 +152,6 @@ const EditableRecommendation = () => {
     setMode('view')
   }
 
-  // const handleDelete = async () => {
-  //   if (recoId) {
-  //     await deleteRecommendation(recoId)
-  //     navigation.goBack()
-  //   }
-  // }
-
   const handleDelete = async () => {
     Alert.alert(
       'Delete Recommendation',
@@ -130,6 +169,19 @@ const EditableRecommendation = () => {
           },
         },
       ]
+    )
+  }
+
+  const onRate = async (rate: number) => {
+    const result = await addRating(
+      recoId,
+      rate,
+      auth.currentUser?.uid,
+      'Test Comment'
+    )
+    setShowRating(false)
+    Alert.alert(
+      result ? 'Thank you for your rating!' : 'Your Rate has been updated.'
     )
   }
 
@@ -209,7 +261,8 @@ const EditableRecommendation = () => {
             resizeMode="contain"
           />
         ) : (
-          Mode === 'view' && <View style={{ height: 120 }} />
+          //Mode === 'view' && <View style={{ height: 120 }} />
+          Mode === 'view' && <View />
         )}
 
         {Mode !== 'view' && (
@@ -239,7 +292,7 @@ const EditableRecommendation = () => {
             />
           </MapView>
         ) : (
-          Mode === 'view' && <View style={{ height: 140 }} />
+          Mode === 'view' && <View style={{ height: 200 }} />
         )}
 
         {Mode !== 'view' ? (
@@ -272,6 +325,7 @@ const EditableRecommendation = () => {
             flexDirection: 'row',
             justifyContent: Mode === 'new' ? 'center' : 'space-between',
             paddingHorizontal: 20,
+            //marginTop: 200,
           }}
         >
           {Mode !== 'new' && (
@@ -303,11 +357,76 @@ const EditableRecommendation = () => {
             paddingHorizontal: 20,
           }}
         >
-          <Text style={{ color: 'black', fontSize: 16, fontFamily: 'serif' }}>
-            {Mode === 'view' &&
-              'Created by: ' + usernameCreator + '\n' + 'Rating: '}
-          </Text>
+          {Mode === 'view' && (
+            <View>
+              <Text
+                style={{
+                  color: '#333',
+                  fontSize: 16,
+                  fontFamily: 'serif',
+                  lineHeight: 22,
+                  textAlign: 'center',
+                  marginVertical: 10,
+                }}
+              >
+                Created by:{' '}
+                <Text style={{ fontWeight: 'bold' }}>{usernameCreator}</Text>
+                {'\n'}
+                Overall Ratings: {ratings} ({voterCount})
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowRating(true)}
+                style={{
+                  backgroundColor: '#4682B4',
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  borderRadius: 10,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+              >
+                <Text
+                  style={{
+                    color: 'white',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  }}
+                >
+                  ⭐ Rate!
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
+        <Modal visible={showRating} transparent animationType="fade">
+          <View style={styles.overlayR}>
+            <View style={styles.modalR}>
+              <Text style={styles.titleR}>⭐ Rate this Recommendation</Text>
+              <Text style={styles.subtitleR}>Choose a rating from 1 to 5:</Text>
+              <View style={styles.buttonsR}>
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <TouchableOpacity
+                    key={num}
+                    onPress={() => onRate(num)}
+                    style={styles.buttonR}
+                  >
+                    <Text style={{ fontSize: 20 }}>{'⭐'.repeat(num)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowRating(false)}
+                style={styles.cancelR}
+              >
+                <Text style={{ color: 'red' }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </ImageBackground>
   )
@@ -348,7 +467,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 16,
-    marginBottom: 140,
+    marginBottom: 200,
     marginTop: 20,
   },
   title: {
@@ -439,6 +558,36 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
+  overlayR: {
+    flex: 1,
+    backgroundColor: '#00000088',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalR: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  titleR: { fontSize: 18, fontWeight: 'bold' },
+  subtitleR: { marginTop: 10, marginBottom: 20 },
+  buttonsR: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  buttonR: {
+    padding: 6,
+    backgroundColor: '#eee',
+    borderRadius: 6,
+    margin: 4,
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  cancelR: { marginTop: 20 },
 })
 
 export default EditableRecommendation

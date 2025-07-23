@@ -224,3 +224,84 @@ export const fetchUserNameFromRecommendation = async (
     return ''
   }
 }
+
+export const addRating = async (
+  recommendationId: string,
+  rating: number,
+  userId?: string,
+  comment?: string
+) => {
+  if (!recommendationId || !userId || rating < 1 || rating > 5) return false
+  // search if the user already rated this recommendation
+  const existingRatingSnap = await getDocs(
+    query(
+      collection(db, 'ratings'),
+      where('recommendation_id', '==', recommendationId),
+      where('user_id', '==', userId)
+    )
+  )
+
+  if (!existingRatingSnap.empty) {
+    // Change the old rating to a new one
+    const existingRatingDoc = existingRatingSnap.docs[0]
+    await setDoc(
+      existingRatingDoc.ref,
+      {
+        rating,
+        comment: comment || '',
+      },
+      { merge: true }
+    )
+    return false // Indicate that it was an update, not a new rating
+  }
+
+  try {
+    await addDoc(collection(db, 'ratings'), {
+      recommendation_id: recommendationId,
+      user_id: userId,
+      rating,
+      comment: comment || '',
+    })
+  } catch (error) {
+    console.error('Add rating failed:', error)
+    alert('Failed to add rating')
+  }
+  return true
+}
+
+export const fetchRatingsByRecommendation = async (
+  recommendationId: string | undefined
+): Promise<number> => {
+  if (!recommendationId) return 0
+
+  const ratingsSnap = await getDocs(
+    query(
+      collection(db, 'ratings'),
+      where('recommendation_id', '==', recommendationId)
+    )
+  )
+
+  if (ratingsSnap.empty) return 0
+
+  const totalRating = ratingsSnap.docs.reduce(
+    (sum, doc) => sum + (doc.data().rating || 0),
+    0
+  )
+
+  return totalRating / ratingsSnap.size
+}
+
+export const fetchRatingsByRecommendationCount = async (
+  recommendationId: string | undefined
+): Promise<number> => {
+  if (!recommendationId) return 0
+
+  const ratingsSnap = await getDocs(
+    query(
+      collection(db, 'ratings'),
+      where('recommendation_id', '==', recommendationId)
+    )
+  )
+
+  return ratingsSnap.size
+}
