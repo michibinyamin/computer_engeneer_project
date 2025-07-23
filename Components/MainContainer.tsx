@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native'
 import GeneralList from './GeneralList'
 import GroupsList from './GroupsList'
 import PersonalList from './PersonalList'
 import { auth } from '../firebase'
-import ManagePanel from './ManagePanel' // this will be your admin page
+import ManagePanel from './ManagePanel'
 import { useNavigation } from '@react-navigation/native'
 import adminEmails from '../adminEmails.json'
 import { ImageBackground } from 'react-native'
-
-// const adminEmails = [
-//   'omar@gmail.com',
-//   'Adi.yohanann@gmail.com',
-//   'michibinyamin@gmail.com',
-// ] // Add your admin email(s)
 
 const MainContainer = () => {
   const navigation = useNavigation<any>()
   const [activeTab, setActiveTab] = useState('General')
   const [isAdmin, setIsAdmin] = useState(false)
+
+  const scaleAnim = useState(new Animated.Value(0.8))[0]
+  const opacityAnim = useState(new Animated.Value(0))[0]
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -30,6 +33,24 @@ const MainContainer = () => {
     })
     return unsubscribe
   }, [])
+
+  useEffect(() => {
+    scaleAnim.setValue(0.8)
+    opacityAnim.setValue(0)
+
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [activeTab])
 
   const renderContent = () => {
     switch (activeTab) {
@@ -85,7 +106,16 @@ const MainContainer = () => {
             </TouchableOpacity>
           )}
         </View>
-        {renderContent()}
+
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: opacityAnim,
+            transform: [{ scale: scaleAnim }],
+          }}
+        >
+          {renderContent()}
+        </Animated.View>
       </View>
     </ImageBackground>
   )
@@ -97,17 +127,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: 5,
     paddingBottom: 5,
-    //backgroundColor: '#e0f7fa',
-    backgroundColor: 'rgba(224, 247, 250, 0.9)', // 50% transparent
+    backgroundColor: 'rgba(26, 46, 64, 0.6)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   tab: {
     fontSize: 20,
     fontWeight: 'bold',
     paddingVertical: 10,
-    color: 'black',
+    color: '#cccccc',
   },
   activeTab: {
-    color: '#1565c0',
+    color: '#4da6ff',
   },
 })
 

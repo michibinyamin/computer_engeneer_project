@@ -27,12 +27,20 @@ import RecommendationList from './RecommendationList'
 import adminEmails from '../adminEmails.json'
 
 const randomColors = [
-  '#ff9999',
-  '#99ccff',
-  '#ccffcc',
-  '#ffcc99',
-  '#e6ccff',
-  '#c2f0c2',
+  '#cc6666', // darker red
+  '#6699cc', // darker blue
+  '#99cc99', // darker green
+  '#cc9966', // darker orange
+  '#b399cc', // darker purple
+  '#99cc99', // darker mint
+
+  // added darker colors
+  '#9966cc', // deep purple
+  '#3399cc', // teal blue
+  '#66a366', // moss green
+  '#cc6666', // rose red
+  '#996633', // brownish orange
+  '#666699', // indigo
 ]
 
 const Catagorys = ({

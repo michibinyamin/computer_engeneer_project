@@ -32,7 +32,7 @@ export const fetchGroups = async (user_id: string | undefined) => {
 export const createGroup = async (
   groupName: string,
   groupDesc: string,
-  createdByUserId: string,
+  createdByUserId: string
 ) => {
   try {
     const groupRef = await addDoc(collection(db, 'groups'), {
@@ -55,12 +55,12 @@ export const createGroup = async (
 
 export const addMembership = async (
   inviteUsername: string,
-  group_id: string,
+  group_id: string
 ) => {
   try {
     const usersSnap = await getDocs(collection(db, 'users'))
     const userDoc = usersSnap.docs.find(
-      (doc) => doc.data().username === inviteUsername,
+      (doc) => doc.data().username === inviteUsername
     )
     if (!userDoc) return alert('User not found')
 
@@ -99,6 +99,7 @@ export const fetchRecommendations = async (category_id: string | undefined) => {
       title: doc.data().title,
       content: doc.data().content,
       imageUrl: doc.data().imageUrl,
+      location: doc.data().location,
       created_by: doc.data().created_by,
       color: doc.data().color, // Default color if not set
     }))
@@ -111,8 +112,8 @@ export const addRecommendation = async (
   title: string,
   content: string,
   imageUrl?: string,
-  color?: string,
-  username?: string,
+  location?: string,
+  color?: string
 ): Promise<string | undefined> => {
   if (!title.trim() || !category_id) return
 
@@ -123,6 +124,7 @@ export const addRecommendation = async (
       category_id,
       created_by: auth.currentUser?.uid,
       imageUrl: imageUrl || '',
+      location: location || '',
       color: color || '#ff6f00',
     })
     return docRef.id // Return the new document ID
@@ -137,7 +139,8 @@ export const updateRecommendation = async (
   title: string,
   content: string,
   imageUrl?: string,
-  color?: string,
+  location?: string,
+  color?: string
 ) => {
   //if (!title.trim() || !content.trim() || !recommendationId) return
   if (!recommendationId) return
@@ -150,9 +153,10 @@ export const updateRecommendation = async (
         title,
         content,
         imageUrl: imageUrl || '',
+        location: location || '',
         color: color || '#ff6f00', // Default color if not set
       },
-      { merge: true },
+      { merge: true }
     )
   } catch (error) {
     console.error('Update recommendation failed:', error)
@@ -205,12 +209,12 @@ export const fetchUserNameById = async (userId: string | undefined = '') => {
 }
 
 export const fetchUserNameFromRecommendation = async (
-  recommendationId: string | undefined,
+  recommendationId: string | undefined
 ) => {
   if (!recommendationId) return ''
 
   const recommendationDoc = await getDoc(
-    doc(db, 'recommendations', recommendationId),
+    doc(db, 'recommendations', recommendationId)
   )
   if (recommendationDoc.exists()) {
     const createdBy = recommendationDoc.data().created_by

@@ -26,7 +26,7 @@ const Members = () => {
   const { groupId } = route.params as { groupId: string }
 
   const [members, setMembers] = useState<{ username: string; role: string }[]>(
-    [],
+    []
   )
   const [inviteModal, setInviteModal] = useState(false)
   const [inviteUsername, setInviteUsername] = useState('')
@@ -38,7 +38,7 @@ const Members = () => {
   const fetchMembers = async () => {
     const q = query(
       collection(db, 'membership'),
-      where('group_id', '==', groupId),
+      where('group_id', '==', groupId)
     )
     const snapshot = await getDocs(q)
 
@@ -51,7 +51,7 @@ const Members = () => {
           ? userSnap.data().username
           : 'Unknown'
         return { username, role: data.role }
-      }),
+      })
     )
 
     setMembers(fetchedMembers)
@@ -62,7 +62,7 @@ const Members = () => {
 
     const userQuery = query(
       collection(db, 'users'),
-      where('username', '==', inviteUsername),
+      where('username', '==', inviteUsername)
     )
     const userSnapshot = await getDocs(userQuery)
 

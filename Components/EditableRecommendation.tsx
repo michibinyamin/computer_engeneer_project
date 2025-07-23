@@ -7,7 +7,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native'
+import MapView, { Marker } from 'react-native-maps'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import {
   addRecommendation,
@@ -17,19 +19,19 @@ import {
   fetchUserNameFromRecommendation,
 } from '../Services'
 import { Ionicons } from '@expo/vector-icons'
-import tinycolor from 'tinycolor2'
+//import tinycolor from 'tinycolor2'
 import { deleteDoc } from 'firebase/firestore'
 import { ImageBackground } from 'react-native'
 import { auth } from '../firebase'
 
 const COLORS = [
   'black',
-  '#FF6B6B', // Coral Red
-  '#4ECDC4', // Aqua Green
-  '#FFD93D', // Bright Yellow
-  '#1A8FE3', // Sky Blue
-  '#FF8C42', // Orange
-  '#9B5DE5', // Purple
+  '#CC5555', // Darker Coral Red
+  '#3BA49A', // Darker Aqua Green
+  '#CCAD31', // Darker Bright Yellow
+  '#166EAF', // Darker Sky Blue
+  '#CC7035', // Darker Orange
+  '#7C48B8', // Darker Purple
 ]
 
 const EditableRecommendation = () => {
@@ -41,6 +43,7 @@ const EditableRecommendation = () => {
     title: initialTitle,
     content: initialContent,
     imageUrl,
+    location: initialLocation = '',
     color = '#ff6f00',
     created_by: initialCreatedBy = '', // Default to empty string for new recommendation
     viewMode = 'view',
@@ -50,15 +53,17 @@ const EditableRecommendation = () => {
     title: string
     content: string
     imageUrl?: string
+    location?: string
     color?: string
     created_by?: string
     viewMode?: string
   }
 
   const [Mode, setMode] = useState(viewMode) // view, edit or new
-  const [content, setContent] = useState(initialContent)
   const [title, setTitle] = useState(initialTitle)
+  const [content, setContent] = useState(initialContent)
   const [image, setImage] = useState(imageUrl || '')
+  const [location, setLocation] = useState(initialLocation)
   const [selectedColor, setSelectedColor] = useState(color)
   const [recoId, setRecommendationId] = useState(initialRecommendationId) // Optional for edit mode
   //const [color, setColor] = useState(color);
@@ -75,29 +80,57 @@ const EditableRecommendation = () => {
     fetchCreatorUserName()
   }, [])
 
-  const brightColor = tinycolor(color).brighten(20).toHexString()
+  //const brightColor = tinycolor(color).brighten(20).toHexString()
 
   const handleSave = async () => {
     if (Mode === 'edit') {
-      await updateRecommendation(recoId, title, content, image, selectedColor)
+      await updateRecommendation(
+        recoId,
+        title,
+        content,
+        image,
+        location,
+        selectedColor
+      )
     } else if (Mode === 'new') {
       const newId = await addRecommendation(
         category_id,
         title,
         content,
         image,
-        selectedColor,
+        location,
+        selectedColor
       )
       if (newId) setRecommendationId(newId)
     }
     setMode('view')
   }
 
+  // const handleDelete = async () => {
+  //   if (recoId) {
+  //     await deleteRecommendation(recoId)
+  //     navigation.goBack()
+  //   }
+  // }
+
   const handleDelete = async () => {
-    if (recoId) {
-      await deleteRecommendation(recoId)
-      navigation.goBack()
-    }
+    Alert.alert(
+      'Delete Recommendation',
+      'Are you sure you want to delete this?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (recoId) {
+              await deleteRecommendation(recoId)
+              navigation.goBack()
+            }
+          },
+        },
+      ]
+    )
   }
 
   return (
@@ -178,6 +211,37 @@ const EditableRecommendation = () => {
         ) : (
           Mode === 'view' && <View style={{ height: 120 }} />
         )}
+
+        {Mode !== 'view' && (
+          <TextInput
+            style={styles.input}
+            value={location}
+            onChangeText={setLocation}
+            placeholder="Enter location (lat,lng)"
+          />
+        )}
+
+        {Mode === 'view' && location ? (
+          <MapView
+            style={styles.location}
+            initialRegion={{
+              latitude: parseFloat(location.split(',')[0]),
+              longitude: parseFloat(location.split(',')[1]),
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Marker
+              coordinate={{
+                latitude: parseFloat(location.split(',')[0]),
+                longitude: parseFloat(location.split(',')[1]),
+              }}
+            />
+          </MapView>
+        ) : (
+          Mode === 'view' && <View style={{ height: 140 }} />
+        )}
+
         {Mode !== 'view' ? (
           <View style={{ marginTop: 0, marginBottom: 80 }}>
             <Text style={{ fontWeight: 'bold' }}>Choose a color:</Text>
@@ -235,7 +299,7 @@ const EditableRecommendation = () => {
             position: 'absolute',
             bottom: 100,
             width: '100%',
-            //alignItems: 'center',
+            //alignItems: 'center's,
             paddingHorizontal: 20,
           }}
         >
@@ -274,6 +338,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   image: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    //marginBottom: 140,
+    marginTop: 20,
+  },
+  location: {
     width: '100%',
     height: 200,
     borderRadius: 16,

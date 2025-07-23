@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Animated,
 } from 'react-native'
 import { auth } from '../firebase'
 import { fetchGroups, createGroup } from '../Services'
@@ -21,8 +22,50 @@ const GroupsList = () => {
   const [groupName, setGroupName] = useState('')
   const [groupDesc, setGroupDesc] = useState('')
   const [groupEntered, setGroupEntered] = useState('') // Id will be here
-
+  const user = auth.currentUser
   const navigation = useNavigation<any>()
+
+  const [scaleAnimEntered] = useState(new Animated.Value(0.8))
+  const [opacityAnimEntered] = useState(new Animated.Value(0))
+
+  const [scaleAnimList] = useState(new Animated.Value(0.8))
+  const [opacityAnimList] = useState(new Animated.Value(0))
+
+  // Animate when groupEntered changes
+  useEffect(() => {
+    if (groupEntered) {
+      scaleAnimEntered.setValue(0.8)
+      opacityAnimEntered.setValue(0)
+      Animated.parallel([
+        Animated.timing(scaleAnimEntered, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnimEntered, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start()
+    } else {
+      scaleAnimList.setValue(0.8)
+      opacityAnimList.setValue(0)
+      Animated.parallel([
+        Animated.timing(scaleAnimList, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnimList, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start()
+    }
+  }, [groupEntered])
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
       loadGroups()
@@ -97,22 +140,36 @@ const GroupsList = () => {
   )
 
   return groupEntered ? (
-    <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
+    <Animated.View
+      style={{
+        flex: 1,
+        opacity: opacityAnimEntered,
+        transform: [{ scale: scaleAnimEntered }],
+      }}
+    >
+      <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
+    </Animated.View>
   ) : (
-    <View style={styles.container}>
-      <Text style={styles.title}>Your Groups</Text>
-      {renderGroupList()}
-
-      <TouchableOpacity
-        testID="open-modal-button"
-        style={styles.fab}
-        onPress={() => setModalVisible(true)}
-      >
-        <Ionicons name="add-circle" size={60} color="#dbeafe" />
-      </TouchableOpacity>
-
-      {renderCreateGroupModal()}
-    </View>
+    <Animated.View
+      style={{
+        flex: 1,
+        opacity: opacityAnimList,
+        transform: [{ scale: scaleAnimList }],
+      }}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Your Groups</Text>
+        {renderGroupList()}
+        <TouchableOpacity
+          testID="open-modal-button"
+          style={styles.fab}
+          onPress={() => setModalVisible(true)}
+        >
+          <Ionicons name="add-circle" size={60} color="#dbeafe" />
+        </TouchableOpacity>
+        {renderCreateGroupModal()}
+      </View>
+    </Animated.View>
   )
 }
 

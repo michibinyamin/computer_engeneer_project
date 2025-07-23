@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   TextInput,
   BackHandler,
   Image,
+  Animated,
 } from 'react-native'
 import { fetchRecommendations } from '../Services'
 import {
@@ -17,26 +18,17 @@ import {
   useFocusEffect,
 } from '@react-navigation/native'
 import { auth, db } from '../firebase'
-import {
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  deleteDoc,
-} from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { Ionicons } from '@expo/vector-icons'
 
 const COLORS = [
   'black',
-  '#FF6B6B', // Coral Red
-  '#4ECDC4', // Aqua Green
-  '#FFD93D', // Bright Yellow
-  '#1A8FE3', // Sky Blue
-  '#FF8C42', // Orange
-  '#9B5DE5', // Purple
+  '#FF6B6B',
+  '#4ECDC4',
+  '#FFD93D',
+  '#1A8FE3',
+  '#FF8C42',
+  '#9B5DE5',
 ]
 
 const RecommendationList = ({
@@ -48,13 +40,12 @@ const RecommendationList = ({
 }) => {
   useFocusEffect(
     React.useCallback(() => {
-      // This will run when the screen is focused(back button to the screen )
       loadRecommendations()
-    }, []),
+    }, [category_id])
   )
+
   const navigation = useNavigation()
   const route = useRoute()
-  //const { category_id } = route.params as { category_id: string };
 
   const [options, setOptions] = useState<
     {
@@ -62,25 +53,23 @@ const RecommendationList = ({
       title: string
       content: string
       imageUrl?: string
+      location?: string
       created_by?: string
       color?: string
     }[]
   >([])
-  const [RecoModal, setRecoModal] = useState(false)
-  const [recommendations, setRecommendations] = useState<any[]>([])
-  const [recoName, setRecoName] = useState('')
-  const [recoContent, setRecoContent] = useState('')
+
+  const [scaleAnim] = useState(new Animated.Value(0.8))
+  const [opacityAnim] = useState(new Animated.Value(0))
+  const firstRender = useRef(true)
   const [catName, setCatName] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
-  const [selectedColor, setSelectedColor] = useState(COLORS[0])
-  const [addReco, setAddReco] = useState(false)
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
       loadRecommendations()
     })
     return unsubscribe
-  }, [])
+  }, [category_id])
 
   const loadRecommendations = async () => {
     const user = auth.currentUser
@@ -90,27 +79,32 @@ const RecommendationList = ({
       Recommendations.map((r: any, idx: number) => ({
         ...r,
         color: r.color || COLORS[idx % COLORS.length],
-      })),
+      }))
     )
   }
 
-  const handleAddReco = async () => {
-    if (!recoName.trim()) return
-    await addDoc(collection(db, 'recommendations'), {
-      title: recoName,
-      category_id: category_id,
-      created_by: auth.currentUser?.uid,
-      content: recoContent,
-      imageUrl: imageUrl,
-      color: selectedColor, // Save color
-    })
-    setRecoModal(false)
-    setRecoName('')
-    setImageUrl('')
-    setRecoContent('')
-    setSelectedColor(COLORS[0])
-    loadRecommendations()
-  }
+  // Animate ONLY on first mount, not when navigating back
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+
+      scaleAnim.setValue(0.8)
+      opacityAnim.setValue(0)
+
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start()
+    }
+  }, [options])
 
   useEffect(() => {
     const fetchCatName = async () => {
@@ -121,7 +115,7 @@ const RecommendationList = ({
       }
     }
     fetchCatName()
-  }, [])
+  }, [category_id])
 
   return (
     <>
@@ -133,43 +127,53 @@ const RecommendationList = ({
       </View>
 
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.grid}>
-          {options.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.button,
-                {
-                  backgroundColor:
-                    option.color || COLORS[index % COLORS.length],
-                },
-              ]}
-              onPress={() =>
-                navigation.navigate('EditableRecommendation', {
-                  category_id: category_id,
-                  recommendationId: option.recoId,
-                  title: option.title,
-                  content: option.content,
-                  imageUrl: option.imageUrl,
-                  color: option.color,
-                  created_by: option.created_by,
-                  viewMode: 'view',
-                })
-              }
-            >
-              {option.imageUrl ? (
-                <Image
-                  source={{ uri: option.imageUrl }}
-                  style={styles.tileImage}
-                  resizeMode="cover"
-                />
-              ) : null}
-              <View style={styles.titleOverlay}>
-                <Text style={styles.buttonText}>{option.title}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: opacityAnim,
+            transform: [{ scale: scaleAnim }],
+          }}
+        >
+          <ScrollView contentContainerStyle={styles.grid}>
+            {options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor:
+                      option.color || COLORS[index % COLORS.length],
+                  },
+                ]}
+                onPress={() =>
+                  navigation.navigate('EditableRecommendation', {
+                    category_id: category_id,
+                    recommendationId: option.recoId,
+                    title: option.title,
+                    content: option.content,
+                    imageUrl: option.imageUrl,
+                    location: option.location,
+                    color: option.color,
+                    created_by: option.created_by,
+                    viewMode: 'view',
+                  })
+                }
+              >
+                {option.imageUrl ? (
+                  <Image
+                    source={{ uri: option.imageUrl }}
+                    style={styles.tileImage}
+                    resizeMode="cover"
+                  />
+                ) : null}
+                <View style={styles.titleOverlay}>
+                  <Text style={styles.buttonText}>{option.title}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
         <TouchableOpacity
           style={styles.addRecoBtn}
           onPress={() => {
@@ -179,6 +183,7 @@ const RecommendationList = ({
               title: '',
               content: '',
               imageUrl: '',
+              location: '',
               color: 'black',
               created_by: auth.currentUser?.uid,
               viewMode: 'new',
@@ -187,65 +192,6 @@ const RecommendationList = ({
         >
           <Text style={styles.fabText}>+ Add Recommendation</Text>
         </TouchableOpacity>
-        <Modal visible={RecoModal} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>New Recommendation</Text>
-              <TextInput
-                placeholder="Recommendation title"
-                value={recoName}
-                onChangeText={setRecoName}
-                style={styles.input}
-              />
-              <TextInput
-                placeholder="Recommendation content"
-                value={recoContent}
-                onChangeText={setRecoContent}
-                style={[styles.input, { height: 100 }]}
-                multiline={true}
-                numberOfLines={4}
-              />
-              <TextInput
-                placeholder="Image URL (optional)"
-                value={imageUrl}
-                onChangeText={setImageUrl}
-                style={styles.input}
-              />
-              <Text style={{ marginTop: 10, fontWeight: 'bold' }}>
-                Choose a color:
-              </Text>
-              <View style={styles.colorPickerRow}>
-                {COLORS.map((color) => (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      styles.colorCircle,
-                      {
-                        backgroundColor: color,
-                        borderWidth: selectedColor === color ? 3 : 1,
-                        borderColor: selectedColor === color ? 'black' : '#ccc',
-                      },
-                    ]}
-                    onPress={() => setSelectedColor(color)}
-                  />
-                ))}
-              </View>
-              <TouchableOpacity
-                style={styles.inviteButton}
-                onPress={handleAddReco}
-              >
-                <Text style={styles.inviteButtonText}>Add</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setRecoModal(false)}>
-                <Text
-                  style={{ color: 'red', textAlign: 'center', marginTop: 10 }}
-                >
-                  Close
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     </>
   )
@@ -262,7 +208,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: '#0a0f2c',
-    //backgroundColor: 'white',
     position: 'relative',
   },
   centeredGroupName: {
@@ -274,17 +219,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#dbeafe',
   },
-  headerText: {
-    color: 'white',
-    fontSize: 35,
-    fontWeight: 'bold',
-  },
-  buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    margin: 20,
-  },
   grid: {
     paddingHorizontal: 16,
     paddingTop: 24,
@@ -292,7 +226,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-
   button: {
     width: '47%',
     height: 160,
@@ -301,14 +234,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
-    backgroundColor: '#fff', // Will be overridden by getColor()
+    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 5,
   },
-
   tileImage: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 20,
@@ -331,7 +263,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-
   addRecoBtn: {
     position: 'absolute',
     bottom: 30,
@@ -345,59 +276,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '85%',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 6,
-    marginTop: 10,
-    textAlignVertical: 'top', // Add this
-    textAlign: 'left', // Add this
-  },
-  inviteButton: {
-    backgroundColor: 'darkblue',
-    padding: 10,
-    marginTop: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  inviteButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  recoImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  colorPickerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-  },
-  colorCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginHorizontal: 4,
   },
 })
