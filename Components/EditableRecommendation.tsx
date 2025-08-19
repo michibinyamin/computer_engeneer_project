@@ -28,6 +28,7 @@ import { ImageBackground } from 'react-native'
 import { auth } from '../firebase'
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry'
 import { log } from 'detox'
+import adminEmails from '../adminEmails.json'
 
 const COLORS = [
   'black',
@@ -77,6 +78,11 @@ const EditableRecommendation = () => {
   const [showRating, setShowRating] = useState(false)
   const [ratings, setRatings] = useState<string>('')
   const [voterCount, setVoterCount] = useState(0)
+  
+  const [isPublisher, setIsPublisher] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const canEdit = isPublisher || isAdmin
+
 
   // i want to load the username of the creator of the recommendation
   useEffect(() => {
@@ -87,6 +93,18 @@ const EditableRecommendation = () => {
 
     fetchCreatorUserName()
   }, [recoId])
+
+  useEffect(() => {
+  const u = auth.currentUser
+  setIsPublisher(!!(u && creatorId && u.uid === creatorId))
+
+  // optional admin check (matches pattern used in other files)
+  if (u && adminEmails.includes(u.email ?? '')) {
+    setIsAdmin(true)
+  } else {
+    setIsAdmin(false)
+  }
+}, [creatorId])
 
   useEffect(() => {
     const fetchRatingByRecoId = async () => {
@@ -129,49 +147,44 @@ const EditableRecommendation = () => {
   //const brightColor = tinycolor(color).brighten(20).toHexString()
 
   const handleSave = async () => {
-    if (Mode === 'edit') {
-      await updateRecommendation(
-        recoId,
-        title,
-        content,
-        image,
-        location,
-        selectedColor
-      )
-    } else if (Mode === 'new') {
-      const newId = await addRecommendation(
-        category_id,
-        title,
-        content,
-        image,
-        location,
-        selectedColor
-      )
-      if (newId) setRecommendationId(newId)
-    }
-    setMode('view')
+  if (Mode === 'edit' && !canEdit) {
+    Alert.alert('Permission denied', 'Only the publisher can edit this.')
+    return
   }
-
-  const handleDelete = async () => {
-    Alert.alert(
-      'Delete Recommendation',
-      'Are you sure you want to delete this?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            if (recoId) {
-              await deleteRecommendation(recoId)
-              navigation.goBack()
-            }
-          },
-        },
-      ]
+  if (Mode === 'edit') {
+    await updateRecommendation(recoId, title, content, image, location, selectedColor)
+  } else if (Mode === 'new') {
+    const newId = await addRecommendation(
+      category_id, title, content, image, location, selectedColor
     )
+    if (newId) {
+      setRecommendationId(newId)
+      setCreatorId(auth.currentUser?.uid || '')
+      setIsPublisher(true) // you are the creator of the new item
+    }
   }
+  setMode('view')
+}
 
+const handleDelete = async () => {
+  if (!canEdit) {
+    Alert.alert('Permission denied', 'Only the publisher can delete this.')
+    return
+  }
+  Alert.alert('Delete Recommendation', 'Are you sure?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete',
+      style: 'destructive',
+      onPress: async () => {
+        if (recoId) {
+          await deleteRecommendation(recoId)
+          navigation.goBack()
+        }
+      },
+    },
+  ])
+}
   const onRate = async (rate: number) => {
     const result = await addRating(
       recoId,
@@ -316,37 +329,41 @@ const EditableRecommendation = () => {
             </View>
           </View>
         ) : null}
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 40,
-            width: '100%',
-            alignItems: 'center',
-            flexDirection: 'row',
-            justifyContent: Mode === 'new' ? 'center' : 'space-between',
-            paddingHorizontal: 20,
-            //marginTop: 200,
-          }}
-        >
-          {Mode !== 'new' && (
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#ff6666' }]}
-              onPress={() => handleDelete()}
-            >
-              <Text style={styles.buttonText}>Delete</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: selectedColor }]}
-            onPress={() =>
-              Mode === 'edit' || Mode === 'new' ? handleSave() : setMode('edit')
-            }
+
+        {/* Bottom buttons: show only if canEdit */}
+        {canEdit && (
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 40,
+              width: '100%',
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: Mode === 'new' ? 'center' : 'space-between',
+              paddingHorizontal: 20,
+            }}
           >
-            <Text style={styles.buttonText}>
-              {Mode === 'edit' || Mode === 'new' ? 'Save' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {Mode !== 'new' && (
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#ff6666' }]}
+                onPress={handleDelete}
+              >
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: selectedColor }]}
+              onPress={() =>
+                Mode === 'edit' || Mode === 'new' ? handleSave() : setMode('edit')
+              }
+            >
+              <Text style={styles.buttonText}>
+                {Mode === 'edit' || Mode === 'new' ? 'Save' : 'Edit'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
         {/* <View style={styles.description}> */}
         <View
           style={{
