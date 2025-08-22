@@ -14,6 +14,8 @@ import AdminUsersScreen from './Components/AdminUsersScreen'
 import UsersInfo from './Components/UsersInfo'
 import ManagePanel from './Components/ManagePanel'
 import EditableRecommendation from './Components/EditableRecommendation'
+import GroupsInfo from './Components/GroupsInfo'
+import { OpenGroupScreen } from './Components/GroupsInfo'
 
 const Stack = createStackNavigator()
 
@@ -25,6 +27,7 @@ function CustomHeader() {
   )
 }
 
+
 export default function App() {
   return (
     <>
@@ -33,11 +36,15 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Welcome"
             screenOptions={({ route }) => ({
+              // Show our custom header on most screens except those that render their own top UI
               header: () =>
                 route.name !== 'Tabs' &&
                 route.name !== 'EditableRecommendation' &&
                 route.name !== 'Members' &&
-                route.name !== 'AdminUsersScreen' && <CustomHeader />,
+                route.name !== 'AdminUsersScreen' &&
+                route.name !== 'OpenGroup' && ( // hide header for the direct group page
+                  <CustomHeader />
+                ),
             })}
           >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -49,15 +56,12 @@ export default function App() {
               name="EditableRecommendation"
               component={EditableRecommendation}
             />
-            {/* <Stack.Screen name="GroupInfo" component={GroupInfo} /> */}
-            {/* <Stack.Screen name="Catagorys" component={Catagorys} /> */}
             <Stack.Screen name="Members" component={Members} />
             <Stack.Screen name="ManagePanel" component={ManagePanel} />
             <Stack.Screen name="UsersInfo" component={UsersInfo} />
-            <Stack.Screen
-              name="AdminUsersScreen"
-              component={AdminUsersScreen}
-            />
+            <Stack.Screen name="AdminUsersScreen" component={AdminUsersScreen} />
+            <Stack.Screen name="GroupsInfo" component={GroupsInfo} />
+            <Stack.Screen name="OpenGroup" component={OpenGroupScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

@@ -58,6 +58,7 @@ const Register = ({
         return
       }
 
+      // Check if username is taken
       if (!querySnapshot.empty) {
         alert('Username already taken, Choose another one.')
         return

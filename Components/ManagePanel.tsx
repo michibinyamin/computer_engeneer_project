@@ -9,12 +9,20 @@ const ManagePanel = () => {
     navigation.navigate('UsersInfo')
   }
 
+  const goToGroupsInfo = () => {
+    navigation.navigate('GroupsInfo')
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Admin Control Panel</Text>
 
       <TouchableOpacity style={styles.button} onPress={goToUsersInfo}>
         <Text style={styles.buttonText}>Manage Users</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={goToGroupsInfo}>
+        <Text style={styles.buttonText}>Manage Groups</Text>
       </TouchableOpacity>
     </View>
   )
@@ -23,7 +31,6 @@ const ManagePanel = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    //backgroundColor: 'white',
     flex: 1,
   },
   header: {
@@ -39,6 +46,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 10,
     alignSelf: 'center',
+    marginVertical: 10,
   },
   buttonText: {
     color: 'white',

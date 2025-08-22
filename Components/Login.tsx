@@ -14,7 +14,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 const Login = ({
   navigation,
 }: {
-  navigation: { navigate: (screen: string) => void }
+  navigation: { navigate: (screen: string) => void; goBack: () => void }
 }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -80,18 +80,18 @@ const Login = ({
         onChangeText={setPassword}
       />
 
+      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
+        <Text style={styles.link}>Forgot Password?</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+      <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.switchText}>
           Don't have an account? <Text style={styles.link}>Sign Up</Text>
         </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
-        <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
   )
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   link: {
+    textAlign:'center',
     color: 'darkblue',
     fontWeight: 'bold',
   },

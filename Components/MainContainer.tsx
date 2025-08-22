@@ -15,9 +15,10 @@ import { useNavigation } from '@react-navigation/native'
 import adminEmails from '../adminEmails.json'
 import { ImageBackground } from 'react-native'
 
-const MainContainer = () => {
+const MainContainer = ({ route }: any) => {
+  
   const navigation = useNavigation<any>()
-  const [activeTab, setActiveTab] = useState('General')
+   const [activeTab, setActiveTab] = useState<'General' | 'Groups' | 'Personal' | 'Manage'>('General')
   const [isAdmin, setIsAdmin] = useState(false)
 
   const scaleAnim = useState(new Animated.Value(0.8))[0]
@@ -33,6 +34,15 @@ const MainContainer = () => {
     })
     return unsubscribe
   }, [])
+
+   // NEW: if Tabs is opened with { initialTab: 'Groups' }, honor it
+  useEffect(() => {
+    const tab = route?.params?.initialTab
+    if (tab && ['General', 'Groups', 'Personal', 'Manage'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [route?.params?.initialTab])
+  
 
   useEffect(() => {
     scaleAnim.setValue(0.8)
