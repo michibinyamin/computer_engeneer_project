@@ -67,6 +67,32 @@ const AdminUsersScreen = () => {
     ])
   }
 
+  const handleUnban = async () => {
+    Alert.alert('Confirm Unban', 'Unban this user now?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Unban',
+        onPress: async () => {
+          try {
+            await updateDoc(doc(db, 'users', userId), {
+              bannedUntil: null,
+              status: 'active',
+            })
+            setUser((prev: any) => ({
+              ...prev,
+              bannedUntil: null,
+              status: 'active',
+            }))
+            Alert.alert('User unbanned')
+          } catch (error) {
+            Alert.alert('Error unbanning user')
+            console.error(error)
+          }
+        },
+      },
+    ])
+  }
+
   const handleDelete = async () => {
     Alert.alert(
       'Delete User',
@@ -80,6 +106,7 @@ const AdminUsersScreen = () => {
             try {
               await deleteDoc(doc(db, 'users', userId))
               Alert.alert('User deleted')
+              // Optional: also remove memberships/ratings/etc. if you want
               navigation.goBack()
             } catch (error) {
               Alert.alert('Error deleting user')
@@ -91,14 +118,18 @@ const AdminUsersScreen = () => {
     )
   }
 
-  const formatBanDate = (timestamp?: Timestamp) => {
-    if (!timestamp) return null
-    const date = timestamp.toDate()
+  const formatBanDate = (timestamp?: Timestamp | null) => {
+    if (!timestamp || typeof (timestamp as any)?.toDate !== 'function') return null
+    const date = (timestamp as Timestamp).toDate()
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
   }
 
-  const isBanned =
-    user?.bannedUntil && new Date(user.bannedUntil.toDate()) > new Date()
+  // Safe check for banned status (handles null/missing)
+  const isBanned = (() => {
+    const t = user?.bannedUntil
+    if (!t || typeof t.toDate !== 'function') return false
+    return t.toDate() > new Date()
+  })()
 
   if (!user) return <Text style={styles.loading}>Loading...</Text>
 
@@ -128,9 +159,18 @@ const AdminUsersScreen = () => {
         </>
       )}
 
-      <TouchableOpacity style={styles.actionBtn} onPress={handleBan}>
-        <Text style={styles.actionText}>Ban for 7 Days</Text>
-      </TouchableOpacity>
+      {!isBanned ? (
+        <TouchableOpacity style={styles.actionBtn} onPress={handleBan}>
+          <Text style={styles.actionText}>Ban for 7 Days</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={[styles.actionBtn, { backgroundColor: '#16a34a' }]}
+          onPress={handleUnban}
+        >
+          <Text style={styles.actionText}>Unban User</Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         style={[styles.actionBtn, styles.deleteBtn]}

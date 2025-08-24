@@ -1,4 +1,3 @@
-// Services.tsx
 import {
   addDoc,
   collection,
@@ -10,10 +9,12 @@ import {
   getDoc,
   deleteDoc,
   Timestamp,
-  orderBy,
   writeBatch,
 } from 'firebase/firestore'
 import { db, auth } from './firebase'
+import { sendPasswordResetEmail, User } from 'firebase/auth'
+import { deleteUser } from 'firebase/auth'
+
 
 /* =========================
  * USERS
@@ -400,4 +401,64 @@ export const assignRandomAdmin = async (groupId: string) => {
   const idx = Math.floor(Math.random() * restSnap.docs.length)
   const randomDoc = restSnap.docs[idx]
   await setDoc(randomDoc.ref, { role: 'Admin' }, { merge: true })
+}
+
+//////////////////////////////
+export const getUserQuickStats = async (uid: string) => {
+  if (!uid) return { groupsCount: 0, postsCount: 0, avgRating: 0 }
+
+  // joined groups
+  const memSnap = await getDocs(
+    query(collection(db, 'membership'), where('user_id', '==', uid))
+  )
+  const groupsCount = memSnap.size
+
+  // posts authored
+  const recSnap = await getDocs(
+    query(collection(db, 'recommendations'), where('created_by', '==', uid))
+  )
+  const postsCount = recSnap.size
+
+  // average rating on user's posts (across all ratings on those recs)
+  let total = 0
+  let cnt = 0
+  for (const rec of recSnap.docs) {
+    const rSnap = await getDocs(
+      query(collection(db, 'ratings'), where('recommendation_id', '==', rec.id))
+    )
+    rSnap.forEach((d) => {
+      const r = (d.data() as any).rating
+      if (typeof r === 'number') {
+        total += r
+        cnt += 1
+      }
+    })
+  }
+  const avgRating = cnt ? total / cnt : 0
+
+  return { groupsCount, postsCount, avgRating }
+}
+
+export const updateUserProfile = async (
+  uid: string,
+  data: { username?: string; bio?: string; photoURL?: string }
+) => {
+  if (!uid) return
+  await setDoc(doc(db, 'users', uid), data, { merge: true })
+}
+
+export const requestPasswordReset = async (email?: string | null) => {
+  if (!email) throw new Error('No email for this account.')
+  await sendPasswordResetEmail(auth, email)
+}
+
+export const deleteOwnAccount = async () => {
+  const user = auth.currentUser
+  if (!user) return
+
+  // Delete user from Firestore
+  await deleteDoc(doc(db, 'users', user.uid))
+
+  // Delete user from Authentication
+  await deleteUser(user)
 }

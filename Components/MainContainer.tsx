@@ -1,3 +1,4 @@
+// Components/MainContainer.tsx
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -5,20 +6,24 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  ImageBackground,
 } from 'react-native'
+import { useNavigation, DrawerActions } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
+
 import GeneralList from './GeneralList'
 import GroupsList from './GroupsList'
 import PersonalList from './PersonalList'
-import { auth } from '../firebase'
 import ManagePanel from './ManagePanel'
-import { useNavigation } from '@react-navigation/native'
+import { auth } from '../firebase'
 import adminEmails from '../adminEmails.json'
-import { ImageBackground } from 'react-native'
+
+type TabKey = 'General' | 'Groups' | 'Personal' | 'Manage'
 
 const MainContainer = ({ route }: any) => {
-  
   const navigation = useNavigation<any>()
-   const [activeTab, setActiveTab] = useState<'General' | 'Groups' | 'Personal' | 'Manage'>('General')
+
+  const [activeTab, setActiveTab] = useState<TabKey>('General')
   const [isAdmin, setIsAdmin] = useState(false)
 
   const scaleAnim = useState(new Animated.Value(0.8))[0]
@@ -35,14 +40,12 @@ const MainContainer = ({ route }: any) => {
     return unsubscribe
   }, [])
 
-   // NEW: if Tabs is opened with { initialTab: 'Groups' }, honor it
   useEffect(() => {
-    const tab = route?.params?.initialTab
+    const tab = route?.params?.initialTab as TabKey | undefined
     if (tab && ['General', 'Groups', 'Personal', 'Manage'].includes(tab)) {
       setActiveTab(tab)
     }
   }, [route?.params?.initialTab])
-  
 
   useEffect(() => {
     scaleAnim.setValue(0.8)
@@ -84,6 +87,15 @@ const MainContainer = ({ route }: any) => {
       resizeMode="cover"
     >
       <View style={{ flex: 1 }}>
+        {/* Hamburger to open the Drawer */}
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+        >
+          <Ionicons name="menu" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Top tabs */}
         <View style={styles.tabsContainer}>
           <TouchableOpacity onPress={() => setActiveTab('General')}>
             <Text
@@ -132,11 +144,22 @@ const MainContainer = ({ route }: any) => {
 }
 
 const styles = StyleSheet.create({
+  menuBtn: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 50,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
   tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingTop: 5,
     paddingBottom: 5,
+    paddingLeft: 48,        // <- pushes tabs to the right of the hamburger
+    paddingRight: 8,
     backgroundColor: 'rgba(26, 46, 64, 0.6)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },

@@ -10,7 +10,7 @@ import {
   Alert,
   BackHandler,
 } from 'react-native'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute, NavigationProp } from '@react-navigation/native'
 import { db, auth } from '../firebase'
 import {
   doc,
@@ -43,6 +43,11 @@ const randomColors = [
   '#666699', // indigo
 ]
 
+type RootStackParamList = {
+  Members: { groupId: string }
+  // Add other routes here if needed
+}
+
 const Catagorys = ({
   groupId,
   setGroupEntered,
@@ -51,7 +56,7 @@ const Catagorys = ({
   setGroupEntered: (id: string) => void
 }) => {
   //const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art']; // Example options
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
   // const route = useRoute();
   // const { groupId } = route.params as { groupId: string };
 

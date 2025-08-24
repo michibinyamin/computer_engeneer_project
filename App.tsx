@@ -2,10 +2,13 @@ import React from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { NavigationContainer } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
+import { createDrawerNavigator } from '@react-navigation/drawer'
+
 import Register from './Components/Register'
 import Login from './Components/Login'
-import { createStackNavigator } from '@react-navigation/stack'
-import { NavigationContainer } from '@react-navigation/native'
 import WelcomeScreen from './Components/WelcomeScreen'
 import MainContainer from './Components/MainContainer'
 import ResetPassword from './Components/ResetPassword'
@@ -16,8 +19,11 @@ import ManagePanel from './Components/ManagePanel'
 import EditableRecommendation from './Components/EditableRecommendation'
 import GroupsInfo from './Components/GroupsInfo'
 import { OpenGroupScreen } from './Components/GroupsInfo'
+import Sidebar from './Components/Sidebar'
+import EditProfile from './Components/EditProfile'
 
 const Stack = createStackNavigator()
+const Drawer = createDrawerNavigator()
 
 function CustomHeader() {
   return (
@@ -27,6 +33,17 @@ function CustomHeader() {
   )
 }
 
+/** Drawer that wraps ONLY the main Tabs UI (not Login/Register/Welcome) */
+function TabsWithDrawer() {
+  return (
+    <Drawer.Navigator
+      screenOptions={{ headerShown: false }}
+      drawerContent={(props) => <Sidebar {...props} />}
+    >
+      <Drawer.Screen name="Tabs" component={MainContainer} />
+    </Drawer.Navigator>
+  )
+}
 
 export default function App() {
   return (
@@ -42,16 +59,24 @@ export default function App() {
                 route.name !== 'EditableRecommendation' &&
                 route.name !== 'Members' &&
                 route.name !== 'AdminUsersScreen' &&
-                route.name !== 'OpenGroup' && ( // hide header for the direct group page
+                route.name !== 'OpenGroup' &&
+                route.name !== 'EditProfile' &&
+
+                 ( // hide header for the direct group page
                   <CustomHeader />
                 ),
             })}
           >
+            {/* Auth / pre-app screens (no drawer here) */}
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Tabs" component={MainContainer} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
+
+            {/* Main app wrapped by the drawer */}
+            <Stack.Screen name="Tabs" component={TabsWithDrawer} />
+
+            {/* Other stack screens */}
             <Stack.Screen
               name="EditableRecommendation"
               component={EditableRecommendation}
@@ -62,6 +87,9 @@ export default function App() {
             <Stack.Screen name="AdminUsersScreen" component={AdminUsersScreen} />
             <Stack.Screen name="GroupsInfo" component={GroupsInfo} />
             <Stack.Screen name="OpenGroup" component={OpenGroupScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfile} />
+
+             
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>
