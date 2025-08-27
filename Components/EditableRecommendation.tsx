@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -22,13 +22,22 @@ import {
   fetchRatingsByRecommendationCount,
 } from '../Services'
 import { Ionicons } from '@expo/vector-icons'
-//import tinycolor from 'tinycolor2'
-import { deleteDoc } from 'firebase/firestore'
 import { ImageBackground } from 'react-native'
-import { auth } from '../firebase'
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry'
-import { log } from 'detox'
+import { auth, db } from '../firebase'
 import adminEmails from '../adminEmails.json'
+import {
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+  serverTimestamp,
+} from 'firebase/firestore'
 
 const COLORS = [
   'black',
@@ -40,163 +49,254 @@ const COLORS = [
   '#7C48B8', // Darker Purple
 ]
 
+type RouteParams = {
+  category_id: string
+  recommendationId?: string
+  title: string
+  content: string
+  imageUrl?: string
+  location?: string
+  color?: string
+  created_by?: string
+  viewMode?: 'view' | 'edit' | 'new'
+}
+
 const EditableRecommendation = () => {
   const navigation = useNavigation()
   const route = useRoute()
   const {
     category_id,
-    recommendationId: initialRecommendationId = '', // Default to empty string for new recommendation
+    recommendationId: initialRecommendationId = '',
     title: initialTitle,
     content: initialContent,
     imageUrl,
     location: initialLocation = '',
     color = '#ff6f00',
-    created_by: initialCreatedBy = '', // Default to empty string for new recommendation
+    created_by: initialCreatedBy = '',
     viewMode = 'view',
-  } = route.params as {
-    category_id: string
-    recommendationId?: string // Optional for edit mode
-    title: string
-    content: string
-    imageUrl?: string
-    location?: string
-    color?: string
-    created_by?: string
-    viewMode?: string
-  }
+  } = route.params as RouteParams
 
-  const [Mode, setMode] = useState(viewMode) // view, edit or new
+  // Core state
+  const [Mode, setMode] = useState<RouteParams['viewMode']>(viewMode)
   const [title, setTitle] = useState(initialTitle)
   const [content, setContent] = useState(initialContent)
   const [image, setImage] = useState(imageUrl || '')
   const [location, setLocation] = useState(initialLocation)
   const [selectedColor, setSelectedColor] = useState(color)
-  const [recoId, setRecommendationId] = useState(initialRecommendationId) // Optional for edit mode
-  //const [color, setColor] = useState(color);
+  const [recoId, setRecommendationId] = useState(initialRecommendationId)
   const [creatorId, setCreatorId] = useState(initialCreatedBy)
+
+  // Meta
   const [usernameCreator, setUsernameCreator] = useState('')
   const [showRating, setShowRating] = useState(false)
-  const [ratings, setRatings] = useState<string>('')
+  const [ratings, setRatings] = useState<string>('No Rating')
   const [voterCount, setVoterCount] = useState(0)
-  
+
+  // Permissions
   const [isPublisher, setIsPublisher] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const canEdit = isPublisher || isAdmin
 
+  // Comments
+  const [comments, setComments] = useState<
+    Array<{
+      id: string
+      text: string
+      user_id: string
+      username: string
+      createdAt?: any
+      likes: string[]
+      dislikes: string[]
+    }>
+  >([])
+  const [newComment, setNewComment] = useState('')
 
-  // i want to load the username of the creator of the recommendation
+  // ----- Load creator username -----
   useEffect(() => {
-    const fetchCreatorUserName = async () => {
+    const run = async () => {
+      if (!creatorId) return
       const username = await fetchUserNameById(creatorId)
       setUsernameCreator(username || 'Unknown User')
     }
+    run()
+  }, [creatorId])
 
-    fetchCreatorUserName()
-  }, [recoId])
-
+  // ----- Compute publisher/admin flags -----
   useEffect(() => {
-  const u = auth.currentUser
-  setIsPublisher(!!(u && creatorId && u.uid === creatorId))
+    const u = auth.currentUser
+    setIsPublisher(!!(u && creatorId && u.uid === creatorId))
+    setIsAdmin(!!(u && adminEmails.includes(u.email ?? '')))
+  }, [creatorId])
 
-  // optional admin check (matches pattern used in other files)
-  if (u && adminEmails.includes(u.email ?? '')) {
-    setIsAdmin(true)
-  } else {
-    setIsAdmin(false)
-  }
-}, [creatorId])
-
+  // ----- Ratings -----
   useEffect(() => {
-    const fetchRatingByRecoId = async () => {
-      if (recoId) {
-        const rating = await fetchRatingsByRecommendation(recoId)
-        console.log('Rating for recommendation:', rating, recoId)
-        switch (Math.round(rating)) {
-          case 1:
-            setRatings('⭐')
-            break
-          case 2:
-            setRatings('⭐⭐')
-            break
-          case 3:
-            setRatings('⭐⭐⭐')
-            break
-          case 4:
-            setRatings('⭐⭐⭐⭐')
-            break
-          case 5:
-            setRatings('⭐⭐⭐⭐⭐')
-            break
-          default:
-            setRatings('No Rating')
-        }
-      }
+    const load = async () => {
+      if (!recoId) return
+      const avg = await fetchRatingsByRecommendation(recoId)
+      const rounded = Math.round(avg || 0)
+      setRatings(rounded ? '⭐'.repeat(rounded) : 'No Rating')
+      const count = await fetchRatingsByRecommendationCount(recoId)
+      setVoterCount(count)
     }
-
-    const fetchVoterCount = async () => {
-      if (recoId) {
-        const count = await fetchRatingsByRecommendationCount(recoId)
-        setVoterCount(count)
-      }
-    }
-
-    fetchRatingByRecoId()
-    fetchVoterCount()
+    load()
   }, [showRating, recoId])
 
-  //const brightColor = tinycolor(color).brighten(20).toHexString()
-
-  const handleSave = async () => {
-  if (Mode === 'edit' && !canEdit) {
-    Alert.alert('Permission denied', 'Only the publisher can edit this.')
-    return
-  }
-  if (Mode === 'edit') {
-    await updateRecommendation(recoId, title, content, image, location, selectedColor)
-  } else if (Mode === 'new') {
-    const newId = await addRecommendation(
-      category_id, title, content, image, location, selectedColor
+  // ----- Live comments (no index needed; sort client-side) -----
+  useEffect(() => {
+    if (!recoId) return
+    const q = query(
+      collection(db, 'comments'),
+      where('recommendation_id', '==', recoId)
     )
-    if (newId) {
-      setRecommendationId(newId)
-      setCreatorId(auth.currentUser?.uid || '')
-      setIsPublisher(true) // you are the creator of the new item
-    }
-  }
-  setMode('view')
-}
+    const unsub = onSnapshot(q, async (snap) => {
+      const rows = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
+      // Fetch usernames in parallel
+      const withNames = await Promise.all(
+        rows.map(async (r) => {
+          const username = await fetchUserNameById(r.user_id)
+          return {
+            id: r.id,
+            text: r.text,
+            user_id: r.user_id,
+            createdAt: r.createdAt,
+            likes: r.likes || [],
+            dislikes: r.dislikes || [],
+            username: username || 'Anonymous',
+          }
+        })
+      )
+      // Order by createdAt ascending, client-side (avoids composite index)
+      withNames.sort((a, b) => {
+        const ad = a.createdAt?.toDate ? a.createdAt.toDate() : a.createdAt || 0
+        const bd = b.createdAt?.toDate ? b.createdAt.toDate() : b.createdAt || 0
+        return (ad as any) - (bd as any)
+      })
+      setComments(withNames)
+    })
+    return unsub
+  }, [recoId])
 
-const handleDelete = async () => {
-  if (!canEdit) {
-    Alert.alert('Permission denied', 'Only the publisher can delete this.')
-    return
+  // ----- Handlers -----
+  const handleSave = async () => {
+    if (Mode === 'edit' && !canEdit) {
+      Alert.alert('Permission denied', 'Only the publisher can edit this.')
+      return
+    }
+    if (Mode === 'edit') {
+      await updateRecommendation(recoId, title, content, image, location, selectedColor)
+    } else if (Mode === 'new') {
+      const newId = await addRecommendation(
+        category_id,
+        title,
+        content,
+        image,
+        location,
+        selectedColor
+      )
+      if (newId) {
+        setRecommendationId(newId)
+        setCreatorId(auth.currentUser?.uid || '')
+        setMode('view')
+        setIsPublisher(true)
+        return
+      }
+    }
+    setMode('view')
   }
-  Alert.alert('Delete Recommendation', 'Are you sure?', [
-    { text: 'Cancel', style: 'cancel' },
-    {
-      text: 'Delete',
-      style: 'destructive',
-      onPress: async () => {
-        if (recoId) {
+
+  const handleDelete = async () => {
+    if (!canEdit) {
+      Alert.alert('Permission denied', 'Only the publisher can delete this.')
+      return
+    }
+    Alert.alert('Delete Recommendation', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          if (!recoId) return
           await deleteRecommendation(recoId)
           navigation.goBack()
-        }
+        },
       },
-    },
-  ])
-}
-  const onRate = async (rate: number) => {
-    const result = await addRating(
-      recoId,
-      rate,
-      auth.currentUser?.uid,
-      'Test Comment'
-    )
-    setShowRating(false)
-    Alert.alert(
-      result ? 'Thank you for your rating!' : 'Your Rate has been updated.'
-    )
+    ])
   }
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return
+    const u = auth.currentUser
+    if (!u) {
+      Alert.alert('Login required')
+      return
+    }
+    await addDoc(collection(db, 'comments'), {
+      recommendation_id: recoId,
+      user_id: u.uid,
+      text: newComment.trim(),
+      likes: [],
+      dislikes: [],
+      createdAt: serverTimestamp(),
+    })
+    setNewComment('')
+  }
+
+  const handleVote = async (commentId: string, type: 'like' | 'dislike') => {
+    const u = auth.currentUser
+    if (!u) return Alert.alert('Login required')
+    const uid = u.uid
+    const ref = doc(db, 'comments', commentId)
+    const c = comments.find((x) => x.id === commentId)
+    if (!c) return
+    if (type === 'like') {
+      if (c.likes.includes(uid)) {
+        await updateDoc(ref, { likes: arrayRemove(uid) })
+      } else {
+        await updateDoc(ref, { likes: arrayUnion(uid), dislikes: arrayRemove(uid) })
+      }
+    } else {
+      if (c.dislikes.includes(uid)) {
+        await updateDoc(ref, { dislikes: arrayRemove(uid) })
+      } else {
+        await updateDoc(ref, { dislikes: arrayUnion(uid), likes: arrayRemove(uid) })
+      }
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string, ownerUid: string) => {
+    const u = auth.currentUser
+    if (!u) return
+    if (u.uid !== ownerUid && !isAdmin) return
+    Alert.alert('Delete comment?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteDoc(doc(db, 'comments', commentId))
+        },
+      },
+    ])
+  }
+
+  const onRate = async (rate: number) => {
+    const result = await addRating(recoId, rate, auth.currentUser?.uid, 'rating')
+    setShowRating(false)
+    Alert.alert(result ? 'Thank you for your rating!' : 'Your rate has been updated.')
+  }
+
+  const formatDate = (ts: any) => {
+    if (!ts) return ''
+    const d = ts?.toDate ? ts.toDate() : ts
+    try {
+      return d.toLocaleString()
+    } catch {
+      return ''
+    }
+  }
+
+  // Derived booleans
+  const inAddOrEdit = Mode !== 'view'
 
   return (
     <ImageBackground
@@ -204,38 +304,24 @@ const handleDelete = async () => {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: 16,
-          //backgroundColor: '#fff',
-          borderBottomWidth: 1,
-          borderBottomColor: '#0a0f2c',
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{ paddingRight: 16 }}
-        >
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: 16 }}>
           <Ionicons name="arrow-back" size={28} color="#dbeafe" />
         </TouchableOpacity>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: 'center',
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#dbeafe', // light blue
-          }}
-        >
-          Recommendation
-        </Text>
+        <Text style={styles.headerTitle}>Recommendation</Text>
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {Mode !== 'view' ? (
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          // keep add/edit screen identical to your original layout
+          inAddOrEdit ? {} : { paddingBottom: 28 },
+        ]}
+      >
+        {/* Title */}
+        {inAddOrEdit ? (
           <TextInput
             style={styles.input}
             value={title}
@@ -246,8 +332,12 @@ const handleDelete = async () => {
         ) : (
           <Text style={styles.title}>{title}</Text>
         )}
+
+        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: selectedColor }]} />
-        {Mode !== 'view' ? (
+
+        {/* Content */}
+        {inAddOrEdit ? (
           <TextInput
             style={styles.input}
             value={content}
@@ -258,7 +348,9 @@ const handleDelete = async () => {
         ) : (
           <Text style={styles.content}>{content}</Text>
         )}
-        {Mode !== 'view' && (
+
+        {/* Image url input only while editing/creating */}
+        {inAddOrEdit && (
           <TextInput
             style={styles.input}
             value={image}
@@ -267,18 +359,14 @@ const handleDelete = async () => {
             multiline
           />
         )}
-        {Mode === 'view' && image ? (
-          <Image
-            source={{ uri: image }}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        ) : (
-          //Mode === 'view' && <View style={{ height: 120 }} />
-          Mode === 'view' && <View />
+
+        {/* Image preview in view mode */}
+        {!inAddOrEdit && !!image && (
+          <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
         )}
 
-        {Mode !== 'view' && (
+        {/* Location input only while editing/creating */}
+        {inAddOrEdit && (
           <TextInput
             style={styles.input}
             value={location}
@@ -287,7 +375,8 @@ const handleDelete = async () => {
           />
         )}
 
-        {Mode === 'view' && location ? (
+        {/* Map preview in view mode */}
+        {!inAddOrEdit && !!location ? (
           <MapView
             style={styles.location}
             initialRegion={{
@@ -304,93 +393,58 @@ const handleDelete = async () => {
               }}
             />
           </MapView>
-        ) : (
-          Mode === 'view' && <View style={{ height: 200 }} />
-        )}
+        ) : !inAddOrEdit ? (
+          <View style={{ height: 10 }} />
+        ) : null}
 
-        {Mode !== 'view' ? (
-          <View style={{ marginTop: 0, marginBottom: 80 }}>
+        {/* Color picker — ONLY when adding/editing (unchanged from your UI) */}
+        {inAddOrEdit && (
+          <View style={{ marginTop: 0, marginBottom: 24, alignSelf: 'stretch' }}>
             <Text style={{ fontWeight: 'bold' }}>Choose a color:</Text>
             <View style={styles.colorPickerRow}>
-              {COLORS.map((color) => (
+              {COLORS.map((c) => (
                 <TouchableOpacity
-                  key={color}
+                  key={c}
                   style={[
                     styles.colorCircle,
                     {
-                      backgroundColor: color,
-                      borderWidth: selectedColor === color ? 3 : 1,
-                      borderColor: selectedColor === color ? 'black' : '#ccc',
+                      backgroundColor: c,
+                      borderWidth: selectedColor === c ? 3 : 1,
+                      borderColor: selectedColor === c ? 'black' : '#ccc',
                     },
                   ]}
-                  onPress={() => setSelectedColor(color)}
+                  onPress={() => setSelectedColor(c)}
                 />
               ))}
             </View>
           </View>
-        ) : null}
-
-        {/* Bottom buttons: show only if canEdit */}
-        {canEdit && (
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 40,
-              width: '100%',
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: Mode === 'new' ? 'center' : 'space-between',
-              paddingHorizontal: 20,
-            }}
-          >
-            {Mode !== 'new' && (
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: '#ff6666' }]}
-                onPress={handleDelete}
-              >
-                <Text style={styles.buttonText}>Delete</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: selectedColor }]}
-              onPress={() =>
-                Mode === 'edit' || Mode === 'new' ? handleSave() : setMode('edit')
-              }
-            >
-              <Text style={styles.buttonText}>
-                {Mode === 'edit' || Mode === 'new' ? 'Save' : 'Edit'}
-              </Text>
-            </TouchableOpacity>
-          </View>
         )}
-        
-        {/* <View style={styles.description}> */}
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 100,
-            width: '100%',
-            //alignItems: 'center's,
-            paddingHorizontal: 20,
-          }}
-        >
-          {Mode === 'view' && (
-            <View>
-              <Text
-                style={{
-                  color: '#333',
-                  fontSize: 16,
-                  fontFamily: 'serif',
-                  lineHeight: 22,
-                  textAlign: 'center',
-                  marginVertical: 10,
-                }}
-              >
-                Created by:{' '}
-                <Text style={{ fontWeight: 'bold' }}>{usernameCreator}</Text>
-                {'\n'}
-                Overall Ratings: {ratings} ({voterCount})
-              </Text>
+
+        {/* Save button inside panel for add/edit (keeps your original look) */}
+        {inAddOrEdit && (
+          <TouchableOpacity style={[styles.saveBtn]} onPress={handleSave}>
+            <Text style={styles.saveBtnText}>Save</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Publisher + rating (inline; no collision) */}
+        {!inAddOrEdit && (
+          <View style={{ alignSelf: 'stretch', marginTop: 16, marginBottom: 12 }}>
+            <Text
+              style={{
+                color: '#333',
+                fontSize: 16,
+                fontFamily: 'serif',
+                lineHeight: 22,
+                textAlign: 'center',
+                marginBottom: 8,
+              }}
+            >
+              Created by: <Text style={{ fontWeight: 'bold' }}>{usernameCreator}</Text>
+              {'\n'}
+              Overall Ratings: {ratings} ({voterCount})
+            </Text>
+            <View style={{ alignItems: 'center' }}>
               <TouchableOpacity
                 onPress={() => setShowRating(true)}
                 style={{
@@ -405,53 +459,128 @@ const handleDelete = async () => {
                   elevation: 3,
                 }}
               >
-                <Text
-                  style={{
-                    color: 'white',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                  }}
-                >
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
                   ⭐ Rate!
                 </Text>
               </TouchableOpacity>
             </View>
-          )}
-        </View>
-        <Modal visible={showRating} transparent animationType="fade">
-          <View style={styles.overlayR}>
-            <View style={styles.modalR}>
-              <Text style={styles.titleR}>⭐ Rate this Recommendation</Text>
-              <Text style={styles.subtitleR}>Choose a rating from 1 to 5:</Text>
-              <View style={styles.buttonsR}>
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <TouchableOpacity
-                    key={num}
-                    onPress={() => onRate(num)}
-                    style={styles.buttonR}
-                  >
-                    <Text style={{ fontSize: 20 }}>{'⭐'.repeat(num)}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowRating(false)}
-                style={styles.cancelR}
-              >
-                <Text style={{ color: 'red' }}>Cancel</Text>
+          </View>
+        )}
+
+        {/* Comments (view mode only) */}
+        {!inAddOrEdit && (
+          <View style={styles.commentsSection}>
+            <Text style={styles.commentsTitle}>Comments</Text>
+
+            {/* Input row */}
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Write a comment..."
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+              <TouchableOpacity onPress={handleAddComment} style={styles.commentSend}>
+                <Ionicons name="send" size={22} color="darkblue" />
               </TouchableOpacity>
             </View>
+
+            {/* List */}
+            {comments.map((c) => {
+              const me = auth.currentUser?.uid
+              const iLike = !!me && c.likes.includes(me)
+              const iDislike = !!me && c.dislikes.includes(me)
+              const canRemove = me === c.user_id || isAdmin
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  onLongPress={() => canRemove && handleDeleteComment(c.id, c.user_id)}
+                  delayLongPress={300}
+                  style={styles.commentCard}
+                >
+                  <Text style={styles.commentUser}>@{c.username}</Text>
+                  <Text>{c.text}</Text>
+                  <Text style={styles.commentDate}>{formatDate(c.createdAt)}</Text>
+
+                  <View style={styles.commentActions}>
+                    <TouchableOpacity
+                      onPress={() => handleVote(c.id, 'like')}
+                      style={styles.commentBtn}
+                    >
+                      <Ionicons
+                        name={iLike ? 'thumbs-up' : 'thumbs-up-outline'}
+                        size={16}
+                        color="green"
+                      />
+                      <Text style={{ marginLeft: 4 }}>{c.likes.length}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handleVote(c.id, 'dislike')}
+                      style={styles.commentBtn}
+                    >
+                      <Ionicons
+                        name={iDislike ? 'thumbs-down' : 'thumbs-down-outline'}
+                        size={16}
+                        color="red"
+                      />
+                      <Text style={{ marginLeft: 4 }}>{c.dislikes.length}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => Alert.alert('Reported')} style={styles.commentBtn}>
+                      <Ionicons name="flag-outline" size={16} color="orange" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              )
+            })}
           </View>
-        </Modal>
+        )}
+
+        {/* Action buttons (view mode only) */}
+        {!inAddOrEdit && canEdit && (
+          <View style={styles.bottomButtonsInline}>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#ff6666' }]}
+              onPress={handleDelete}
+            >
+              <Text style={styles.buttonText}>Delete</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: selectedColor }]}
+              onPress={() => setMode('edit')}
+            >
+              <Text style={styles.buttonText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Rating modal */}
+      <Modal visible={showRating} transparent animationType="fade">
+        <View style={styles.overlayR}>
+          <View style={styles.modalR}>
+            <Text style={styles.titleR}>⭐ Rate this Recommendation</Text>
+            <Text style={styles.subtitleR}>Choose a rating from 1 to 5:</Text>
+            <View style={styles.buttonsR}>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <TouchableOpacity key={num} onPress={() => onRate(num)} style={styles.buttonR}>
+                  <Text style={{ fontSize: 20 }}>{'⭐'.repeat(num)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity onPress={() => setShowRating(false)} style={styles.cancelR}>
+              <Text style={{ color: 'red' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    //backgroundColor: '#fff',
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 24,
     padding: 15,
@@ -464,29 +593,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     alignItems: 'center',
-    // height: '88%', ← remove or replace
     minHeight: '88%',
   },
-  grid: {
-    padding: 20,
+
+  headerRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#0a0f2c',
   },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 16,
-    //marginBottom: 140,
-    marginTop: 20,
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#dbeafe',
   },
-  location: {
-    width: '100%',
-    height: 200,
-    borderRadius: 16,
-    marginBottom: 200,
-    marginTop: 20,
-  },
+
   title: {
     fontSize: 28,
     fontWeight: '900',
@@ -495,6 +619,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     color: 'black',
+    alignSelf: 'stretch',
   },
   divider: {
     height: 4,
@@ -521,47 +646,27 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     marginBottom: 12,
-    minHeight: 80,
+    minHeight: 60,
     backgroundColor: '#f9f9f9',
   },
-  button: {
-    //marginTop: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    alignSelf: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  imageWrapper: {
-    position: 'relative',
+  image: {
     width: '100%',
-    height: 180,
-    marginVertical: 20,
+    height: 200,
     borderRadius: 16,
-    overflow: 'hidden',
+    marginTop: 20,
   },
-  overlay: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  location: {
+    width: '100%',
+    height: 200,
     borderRadius: 16,
-    padding: 4,
-  },
-  overlayText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    opacity: 0.8,
+    marginTop: 20,
   },
   colorPickerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
+    width: '70%',
+    alignSelf: 'center',
   },
   colorCircle: {
     width: 32,
@@ -569,12 +674,55 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 4,
   },
-  description: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
+
+  // Save button inside the panel (add/edit screen)
+  saveBtn: {
+    backgroundColor: 'black',
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginTop: 6,
   },
+  saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
+  // View-mode action buttons
+  bottomButtonsInline: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  button: { paddingVertical: 10, paddingHorizontal: 32, borderRadius: 8 },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+  // Comments
+  commentsSection: { alignSelf: 'stretch', marginTop: 10 },
+  commentsTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
+  commentInputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  commentSend: { marginLeft: 8, padding: 6, backgroundColor: '#eee', borderRadius: 8 },
+  commentCard: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 10,
+    borderWidth: 0.5,
+    borderColor: '#e6e6e6',
+  },
+  commentUser: { fontWeight: 'bold', marginBottom: 4 },
+  commentDate: { fontSize: 12, color: '#666', marginTop: 2 },
+  commentActions: { flexDirection: 'row', marginTop: 6 },
+  commentBtn: { flexDirection: 'row', alignItems: 'center', marginRight: 12 },
+
+  // Rating modal
   overlayR: {
     flex: 1,
     backgroundColor: '#00000088',
@@ -590,20 +738,8 @@ const styles = StyleSheet.create({
   },
   titleR: { fontSize: 18, fontWeight: 'bold' },
   subtitleR: { marginTop: 10, marginBottom: 20 },
-  buttonsR: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-  buttonR: {
-    padding: 6,
-    backgroundColor: '#eee',
-    borderRadius: 6,
-    margin: 4,
-    minWidth: 40,
-    alignItems: 'center',
-  },
+  buttonsR: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', width: '100%' },
+  buttonR: { padding: 6, backgroundColor: '#eee', borderRadius: 6, margin: 4, minWidth: 40, alignItems: 'center' },
   cancelR: { marginTop: 20 },
 })
 
