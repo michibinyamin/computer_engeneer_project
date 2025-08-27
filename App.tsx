@@ -1,11 +1,13 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, BackHandler, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createDrawerNavigator } from '@react-navigation/drawer'
+import { auth } from './firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 import Register from './Components/Register'
 import Login from './Components/Login'
@@ -17,8 +19,7 @@ import AdminUsersScreen from './Components/AdminUsersScreen'
 import UsersInfo from './Components/UsersInfo'
 import ManagePanel from './Components/ManagePanel'
 import EditableRecommendation from './Components/EditableRecommendation'
-import GroupsInfo from './Components/GroupsInfo'
-import { OpenGroupScreen } from './Components/GroupsInfo'
+import GroupsInfo, { OpenGroupScreen } from './Components/GroupsInfo'
 import Sidebar from './Components/Sidebar'
 import EditProfile from './Components/EditProfile'
 
@@ -33,7 +34,6 @@ function CustomHeader() {
   )
 }
 
-/** Drawer that wraps ONLY the main Tabs UI (not Login/Register/Welcome) */
 function TabsWithDrawer() {
   return (
     <Drawer.Navigator
@@ -46,37 +46,59 @@ function TabsWithDrawer() {
 }
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState<string>('Welcome')
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setInitialRoute('Tabs')
+      } else {
+        setInitialRoute('Welcome')
+      }
+      setReady(true)
+    })
+    return unsub
+  }, [])
+
+  // Handle Android back button → exit app when in main flow
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (initialRoute === 'Tabs') {
+          BackHandler.exitApp()
+          return true
+        }
+        return false
+      }
+    )
+    return () => backHandler.remove()
+  }, [initialRoute])
+
+  if (!ready) return null // or splash screen
+
   return (
     <>
       <SafeAreaView style={styles.container}>
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName="Welcome"
+            initialRouteName={initialRoute}
             screenOptions={({ route }) => ({
-              // Show our custom header on most screens except those that render their own top UI
               header: () =>
                 route.name !== 'Tabs' &&
                 route.name !== 'EditableRecommendation' &&
                 route.name !== 'Members' &&
                 route.name !== 'AdminUsersScreen' &&
                 route.name !== 'OpenGroup' &&
-                route.name !== 'EditProfile' &&
-
-                 ( // hide header for the direct group page
-                  <CustomHeader />
-                ),
+                route.name !== 'EditProfile' && <CustomHeader />,
             })}
           >
-            {/* Auth / pre-app screens (no drawer here) */}
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
-
-            {/* Main app wrapped by the drawer */}
             <Stack.Screen name="Tabs" component={TabsWithDrawer} />
-
-            {/* Other stack screens */}
             <Stack.Screen
               name="EditableRecommendation"
               component={EditableRecommendation}
@@ -88,8 +110,6 @@ export default function App() {
             <Stack.Screen name="GroupsInfo" component={GroupsInfo} />
             <Stack.Screen name="OpenGroup" component={OpenGroupScreen} />
             <Stack.Screen name="EditProfile" component={EditProfile} />
-
-             
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

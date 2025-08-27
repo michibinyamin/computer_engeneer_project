@@ -46,7 +46,7 @@ const AdminUsersScreen = () => {
         text: 'Ban',
         style: 'destructive',
         onPress: async () => {
-          const bannedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+          const bannedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
           try {
             await updateDoc(doc(db, 'users', userId), {
               bannedUntil,
@@ -104,9 +104,9 @@ const AdminUsersScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Only delete from Firestore
               await deleteDoc(doc(db, 'users', userId))
               Alert.alert('User deleted')
-              // Optional: also remove memberships/ratings/etc. if you want
               navigation.goBack()
             } catch (error) {
               Alert.alert('Error deleting user')
@@ -124,7 +124,6 @@ const AdminUsersScreen = () => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
   }
 
-  // Safe check for banned status (handles null/missing)
   const isBanned = (() => {
     const t = user?.bannedUntil
     if (!t || typeof t.toDate !== 'function') return false
@@ -183,31 +182,11 @@ const AdminUsersScreen = () => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: 'white',
-  },
-  loading: {
-    textAlign: 'center',
-    marginTop: 40,
-    fontSize: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-  },
-  value: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 10,
-  },
+  container: { padding: 20, backgroundColor: 'white' },
+  loading: { textAlign: 'center', marginTop: 40, fontSize: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 10 },
+  value: { fontSize: 16, color: '#333', marginBottom: 10 },
   actionBtn: {
     backgroundColor: 'darkblue',
     padding: 14,
@@ -215,14 +194,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
   },
-  actionText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  deleteBtn: {
-    backgroundColor: 'red',
-  },
+  actionText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  deleteBtn: { backgroundColor: 'red' },
 })
 
 export default AdminUsersScreen

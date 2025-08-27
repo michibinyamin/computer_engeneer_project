@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native'
 import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../firebase'
@@ -18,17 +19,28 @@ const ResetPassword = ({
 
   const handleReset = async () => {
     if (!email.trim()) {
-      alert('Please enter your email.')
+      Alert.alert('Missing email', 'Please enter your email address.')
       return
     }
 
     try {
-      await sendPasswordResetEmail(auth, email)
-      alert('Reset link sent! Check your inbox.')
+      await sendPasswordResetEmail(auth, email.trim())
+      Alert.alert(
+        'Success',
+        'Password reset link sent! Please check your inbox (and Spam/Promotions folder).'
+      )
       navigation.goBack()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Reset password error:', error)
-      alert('Error: ' + error)
+      let message = 'Something went wrong. Please try again.'
+      if (error.code === 'auth/user-not-found') {
+        message = 'No account found with this email.'
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Invalid email address.'
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many attempts. Please try again later.'
+      }
+      Alert.alert('Error', message)
     }
   }
 
@@ -40,6 +52,7 @@ const ResetPassword = ({
         style={styles.input}
         placeholder="Enter your email"
         keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
       />
@@ -59,6 +72,8 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingTop: 60,
+    flex: 1,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
