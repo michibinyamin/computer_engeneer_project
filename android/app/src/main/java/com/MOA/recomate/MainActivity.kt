@@ -1,4 +1,4 @@
-package com.m_o_a.recomate
+package com.MOA.recomate
 
 import android.os.Build
 import android.os.Bundle

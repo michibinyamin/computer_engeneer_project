@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "460576278701",
+    "project_id": "recomate-a132f",
+    "storage_bucket": "recomate-a132f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:460576278701:android:61eb335b0e7f51a053de24",
+        "android_client_info": {
+          "package_name": "com.MOA.recomate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "460576278701-andnfn632315ei16jvvgjhaofgdkpidb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.MOA.recomate",
+            "certificate_hash": "25ddee671c5ed11d470a9fa81a2386895907fa48"
+          }
+        },
+        {
+          "client_id": "460576278701-ko1sgndmfhnddlkvnsu329h49lu9rv38.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6j2NOp8hwyiSoNb2gVml8AXsEDXJXV_s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "460576278701-ko1sgndmfhnddlkvnsu329h49lu9rv38.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "460576278701-2b4im98505eg1mlrhtg3c0frmss4va3h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.MOA.recomate"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

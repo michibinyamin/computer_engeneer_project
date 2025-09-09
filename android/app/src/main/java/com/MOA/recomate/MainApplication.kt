@@ -1,4 +1,4 @@
-package com.m_o_a.recomate
+package com.MOA.recomate
 
 import android.app.Application
 import android.content.res.Configuration

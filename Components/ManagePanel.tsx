@@ -13,6 +13,10 @@ const ManagePanel = () => {
     navigation.navigate('GroupsInfo')
   }
 
+  const goToReports = () => {
+  navigation.navigate('ReportsScreen')
+}
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Admin Control Panel</Text>
@@ -23,6 +27,10 @@ const ManagePanel = () => {
 
       <TouchableOpacity style={styles.button} onPress={goToGroupsInfo}>
         <Text style={styles.buttonText}>Manage Groups</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={goToReports}>
+        <Text style={styles.buttonText}>Review Reports</Text>
       </TouchableOpacity>
     </View>
   )
