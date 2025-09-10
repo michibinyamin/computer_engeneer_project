@@ -22,7 +22,7 @@ import {
   fetchRatingsByRecommendationCount,
 } from '../Services'
 import { Ionicons } from '@expo/vector-icons'
-import { ImageBackground } from 'react-native'
+import { ImageBackground, Linking } from 'react-native'
 import { auth, db } from '../firebase'
 import adminEmails from '../adminEmails.json'
 import {
@@ -183,7 +183,14 @@ const EditableRecommendation = () => {
       return
     }
     if (Mode === 'edit') {
-      await updateRecommendation(recoId, title, content, image, location, selectedColor)
+      await updateRecommendation(
+        recoId,
+        title,
+        content,
+        image,
+        location,
+        selectedColor
+      )
     } else if (Mode === 'new') {
       const newId = await addRecommendation(
         category_id,
@@ -252,13 +259,19 @@ const EditableRecommendation = () => {
       if (c.likes.includes(uid)) {
         await updateDoc(ref, { likes: arrayRemove(uid) })
       } else {
-        await updateDoc(ref, { likes: arrayUnion(uid), dislikes: arrayRemove(uid) })
+        await updateDoc(ref, {
+          likes: arrayUnion(uid),
+          dislikes: arrayRemove(uid),
+        })
       }
     } else {
       if (c.dislikes.includes(uid)) {
         await updateDoc(ref, { dislikes: arrayRemove(uid) })
       } else {
-        await updateDoc(ref, { dislikes: arrayUnion(uid), likes: arrayRemove(uid) })
+        await updateDoc(ref, {
+          dislikes: arrayUnion(uid),
+          likes: arrayRemove(uid),
+        })
       }
     }
   }
@@ -279,10 +292,41 @@ const EditableRecommendation = () => {
     ])
   }
 
+  const calculateDistance = (location: string) => {
+    const [lat, lng] = location.split(',').map(Number)
+    const userLocation = { latitude: 0, longitude: 0 } // use phone sensor
+    const distance = getDistance(userLocation, {
+      latitude: lat,
+      longitude: lng,
+    })
+    return distance
+  }
+  const getDistance = (loc1: any, loc2: any) => {
+    const toRad = (value: number) => (value * Math.PI) / 180
+    const R = 6371 // Radius of the Earth in km
+    const dLat = toRad(loc2.latitude - loc1.latitude)
+    const dLon = toRad(loc2.longitude - loc1.longitude)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(loc1.latitude)) *
+        Math.cos(toRad(loc2.latitude)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return Math.round(R * c)
+  }
+
   const onRate = async (rate: number) => {
-    const result = await addRating(recoId, rate, auth.currentUser?.uid, 'rating')
+    const result = await addRating(
+      recoId,
+      rate,
+      auth.currentUser?.uid,
+      'rating'
+    )
     setShowRating(false)
-    Alert.alert(result ? 'Thank you for your rating!' : 'Your rate has been updated.')
+    Alert.alert(
+      result ? 'Thank you for your rating!' : 'Your rate has been updated.'
+    )
   }
 
   const formatDate = (ts: any) => {
@@ -306,7 +350,10 @@ const EditableRecommendation = () => {
     >
       {/* Header */}
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingRight: 16 }}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ paddingRight: 16 }}
+        >
           <Ionicons name="arrow-back" size={28} color="#dbeafe" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Recommendation</Text>
@@ -362,7 +409,11 @@ const EditableRecommendation = () => {
 
         {/* Image preview in view mode */}
         {!inAddOrEdit && !!image && (
-          <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+          <Image
+            source={{ uri: image }}
+            style={styles.image}
+            resizeMode="contain"
+          />
         )}
 
         {/* Location input only while editing/creating */}
@@ -376,7 +427,7 @@ const EditableRecommendation = () => {
         )}
 
         {/* Map preview in view mode */}
-        {!inAddOrEdit && !!location ? (
+        {/* {!inAddOrEdit && !!location ? (
           <MapView
             style={styles.location}
             initialRegion={{
@@ -395,11 +446,36 @@ const EditableRecommendation = () => {
           </MapView>
         ) : !inAddOrEdit ? (
           <View style={{ height: 10 }} />
+        ) : null} */}
+
+        {!inAddOrEdit && !!location ? (
+          // i want to add here also the distance from the location to my current location
+          <>
+            <TouchableOpacity
+              style={styles.buttonUrl}
+              onPress={() => {
+                const [lat, lng] = location.split(',').map(Number)
+                const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+                Linking.openURL(url)
+              }}
+            >
+              <Text style={styles.buttonTextUrl}>View Location on Map</Text>
+            </TouchableOpacity>
+            <View style={{ marginBottom: 10, marginTop: -8 }}>
+              <Text>{calculateDistance(location)} km from you</Text>
+            </View>
+          </>
+        ) : !inAddOrEdit ? (
+          <View style={{ height: 10 }} />
         ) : null}
+
+        {/* Map preview in view mode */}
 
         {/* Color picker — ONLY when adding/editing (unchanged from your UI) */}
         {inAddOrEdit && (
-          <View style={{ marginTop: 0, marginBottom: 24, alignSelf: 'stretch' }}>
+          <View
+            style={{ marginTop: 0, marginBottom: 24, alignSelf: 'stretch' }}
+          >
             <Text style={{ fontWeight: 'bold' }}>Choose a color:</Text>
             <View style={styles.colorPickerRow}>
               {COLORS.map((c) => (
@@ -429,7 +505,9 @@ const EditableRecommendation = () => {
 
         {/* Publisher + rating (inline; no collision) */}
         {!inAddOrEdit && (
-          <View style={{ alignSelf: 'stretch', marginTop: 16, marginBottom: 12 }}>
+          <View
+            style={{ alignSelf: 'stretch', marginTop: 16, marginBottom: 12 }}
+          >
             <Text
               style={{
                 color: '#333',
@@ -440,7 +518,8 @@ const EditableRecommendation = () => {
                 marginBottom: 8,
               }}
             >
-              Created by: <Text style={{ fontWeight: 'bold' }}>{usernameCreator}</Text>
+              Created by:{' '}
+              <Text style={{ fontWeight: 'bold' }}>{usernameCreator}</Text>
               {'\n'}
               Overall Ratings: {ratings} ({voterCount})
             </Text>
@@ -459,7 +538,9 @@ const EditableRecommendation = () => {
                   elevation: 3,
                 }}
               >
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>
+                <Text
+                  style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}
+                >
                   ⭐ Rate!
                 </Text>
               </TouchableOpacity>
@@ -480,7 +561,10 @@ const EditableRecommendation = () => {
                 value={newComment}
                 onChangeText={setNewComment}
               />
-              <TouchableOpacity onPress={handleAddComment} style={styles.commentSend}>
+              <TouchableOpacity
+                onPress={handleAddComment}
+                style={styles.commentSend}
+              >
                 <Ionicons name="send" size={22} color="darkblue" />
               </TouchableOpacity>
             </View>
@@ -494,13 +578,17 @@ const EditableRecommendation = () => {
               return (
                 <TouchableOpacity
                   key={c.id}
-                  onLongPress={() => canRemove && handleDeleteComment(c.id, c.user_id)}
+                  onLongPress={() =>
+                    canRemove && handleDeleteComment(c.id, c.user_id)
+                  }
                   delayLongPress={300}
                   style={styles.commentCard}
                 >
                   <Text style={styles.commentUser}>@{c.username}</Text>
                   <Text>{c.text}</Text>
-                  <Text style={styles.commentDate}>{formatDate(c.createdAt)}</Text>
+                  <Text style={styles.commentDate}>
+                    {formatDate(c.createdAt)}
+                  </Text>
 
                   <View style={styles.commentActions}>
                     <TouchableOpacity
@@ -527,7 +615,10 @@ const EditableRecommendation = () => {
                       <Text style={{ marginLeft: 4 }}>{c.dislikes.length}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => Alert.alert('Reported')} style={styles.commentBtn}>
+                    <TouchableOpacity
+                      onPress={() => Alert.alert('Reported')}
+                      style={styles.commentBtn}
+                    >
                       <Ionicons name="flag-outline" size={16} color="orange" />
                     </TouchableOpacity>
                   </View>
@@ -564,12 +655,19 @@ const EditableRecommendation = () => {
             <Text style={styles.subtitleR}>Choose a rating from 1 to 5:</Text>
             <View style={styles.buttonsR}>
               {[1, 2, 3, 4, 5].map((num) => (
-                <TouchableOpacity key={num} onPress={() => onRate(num)} style={styles.buttonR}>
+                <TouchableOpacity
+                  key={num}
+                  onPress={() => onRate(num)}
+                  style={styles.buttonR}
+                >
                   <Text style={{ fontSize: 20 }}>{'⭐'.repeat(num)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <TouchableOpacity onPress={() => setShowRating(false)} style={styles.cancelR}>
+            <TouchableOpacity
+              onPress={() => setShowRating(false)}
+              style={styles.cancelR}
+            >
               <Text style={{ color: 'red' }}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -682,7 +780,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 8,
     alignSelf: 'center',
-    marginTop: 6,
+    marginTop: 2,
+    marginBottom: 15,
   },
   saveBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 
@@ -699,7 +798,11 @@ const styles = StyleSheet.create({
   // Comments
   commentsSection: { alignSelf: 'stretch', marginTop: 10 },
   commentsTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
-  commentInputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   commentInput: {
     flex: 1,
     borderWidth: 1,
@@ -708,7 +811,12 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#f9f9f9',
   },
-  commentSend: { marginLeft: 8, padding: 6, backgroundColor: '#eee', borderRadius: 8 },
+  commentSend: {
+    marginLeft: 8,
+    padding: 6,
+    backgroundColor: '#eee',
+    borderRadius: 8,
+  },
   commentCard: {
     padding: 10,
     backgroundColor: '#fff',
@@ -738,9 +846,34 @@ const styles = StyleSheet.create({
   },
   titleR: { fontSize: 18, fontWeight: 'bold' },
   subtitleR: { marginTop: 10, marginBottom: 20 },
-  buttonsR: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', width: '100%' },
-  buttonR: { padding: 6, backgroundColor: '#eee', borderRadius: 6, margin: 4, minWidth: 40, alignItems: 'center' },
+  buttonsR: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  buttonR: {
+    padding: 6,
+    backgroundColor: '#eee',
+    borderRadius: 6,
+    margin: 4,
+    minWidth: 40,
+    alignItems: 'center',
+  },
   cancelR: { marginTop: 20 },
+  buttonUrl: {
+    backgroundColor: '#2570baff', // nice blue
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  buttonTextUrl: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 })
 
 export default EditableRecommendation

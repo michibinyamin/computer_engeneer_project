@@ -10,7 +10,11 @@ import {
   Alert,
   BackHandler,
 } from 'react-native'
-import { useNavigation, useRoute, NavigationProp } from '@react-navigation/native'
+import {
+  useNavigation,
+  useRoute,
+  NavigationProp,
+} from '@react-navigation/native'
 import { db, auth } from '../firebase'
 import {
   doc,
