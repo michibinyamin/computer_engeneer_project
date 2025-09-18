@@ -9,6 +9,8 @@ import {
   ScrollView,
   Alert,
   Modal,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -38,6 +40,8 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore'
+
+import * as Location from 'expo-location'
 
 const COLORS = [
   'black',
@@ -82,6 +86,10 @@ const EditableRecommendation = () => {
   const [content, setContent] = useState(initialContent)
   const [image, setImage] = useState(imageUrl || '')
   const [location, setLocation] = useState(initialLocation)
+  const [myLocation, setMyLocation] = useState<{
+    latitude: number
+    longitude: number
+  } | null>(null)
   const [selectedColor, setSelectedColor] = useState(color)
   const [recoId, setRecommendationId] = useState(initialRecommendationId)
   const [creatorId, setCreatorId] = useState(initialCreatedBy)
@@ -96,6 +104,77 @@ const EditableRecommendation = () => {
   const [isPublisher, setIsPublisher] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const canEdit = isPublisher || isAdmin
+
+  // const requestLocationPermission = async () => {
+  //   if (Platform.OS === 'android') {
+  //     const granted = await PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+  //     )
+  //     return granted === PermissionsAndroid.RESULTS.GRANTED
+  //   }
+  //   return true
+  // }
+  // useEffect(() => {
+  //   console.log('Location useEffect running...')
+  //   requestLocationPermission().then((granted) => {
+  //     console.log('Permission result:', granted)
+  //     if (granted) {
+  //       Geolocation.getCurrentPosition(
+  //         (position) => {
+  //           const { latitude, longitude } = position.coords
+  //           setMyLocation({ latitude, longitude })
+  //           console.log('Current position:', latitude, longitude)
+  //         },
+  //         (error) => console.error('Geolocation error:', error),
+  //         { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+  //       )
+  //     } else {
+  //       console.warn('Location permission not granted')
+  //     }
+  //   })
+  // }, [])
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync()
+        if (status !== 'granted') {
+          console.warn('Location permission not granted')
+          return
+        }
+        //const location = await Location.getCurrentPositionAsync({})
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        })
+
+        setMyLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        })
+        console.log(
+          'Current position:',
+          location.coords.latitude,
+          location.coords.longitude
+        )
+      } catch (error) {
+        console.error('Error getting location:', error)
+      }
+    }
+    getLocation()
+  }, [])
+
+  // // Get current location on mount
+  // useEffect(() => {
+  //   navigator.geolocation.getCurrentPosition(
+  //     (position) => {
+  //       const { latitude, longitude } = position.coords
+  //       setMyLocation({ latitude, longitude })
+  //       console.log('Current position:', latitude, longitude)
+  //     },
+  //     (error) => console.error('Error getting location:', error),
+  //     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+  //   )
+  // }, [])
 
   // Comments
   const [comments, setComments] = useState<
@@ -292,9 +371,12 @@ const EditableRecommendation = () => {
     ])
   }
 
-  const calculateDistance = (location: string) => {
+  const calculateDistance = (
+    userLocation: { latitude: number; longitude: number } | null
+  ) => {
+    if (!userLocation || !location) return '?'
     const [lat, lng] = location.split(',').map(Number)
-    const userLocation = { latitude: 0, longitude: 0 } // use phone sensor
+    if (isNaN(lat) || isNaN(lng)) return '?'
     const distance = getDistance(userLocation, {
       latitude: lat,
       longitude: lng,
@@ -462,7 +544,7 @@ const EditableRecommendation = () => {
               <Text style={styles.buttonTextUrl}>View Location on Map</Text>
             </TouchableOpacity>
             <View style={{ marginBottom: 10, marginTop: -8 }}>
-              <Text>{calculateDistance(location)} km from you</Text>
+              <Text>{calculateDistance(myLocation)} km from you</Text>
             </View>
           </>
         ) : !inAddOrEdit ? (
