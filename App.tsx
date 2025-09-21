@@ -67,6 +67,7 @@ export default function App() {
 
   return (
     <>
+      <StatusBar style="auto" />
       <SafeAreaView style={styles.container}>
         <NavigationContainer>
           <Stack.Navigator
@@ -108,7 +109,6 @@ export default function App() {
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>
-      <StatusBar style="auto" />
       <Toast />
     </>
   )

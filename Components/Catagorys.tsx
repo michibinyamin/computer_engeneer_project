@@ -169,19 +169,21 @@ const Catagorys = ({
       )}
 
       <ScrollView contentContainerStyle={styles.grid}>
-        {categories.map((cat, index) => (
-          <TouchableOpacity
-            key={cat.id}
-            onLongPress={() => handleDeleteCategory(cat.id)}
-            onPress={() => setCatEntered(cat.id)}
-            style={[
-              styles.category,
-              { backgroundColor: randomColors[index % randomColors.length] },
-            ]}
-          >
-            <Text style={styles.categoryText}>{cat.name}</Text>
-          </TouchableOpacity>
-        ))}
+        {categories
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((cat, index) => (
+            <TouchableOpacity
+              key={cat.id}
+              onLongPress={() => handleDeleteCategory(cat.id)}
+              onPress={() => setCatEntered(cat.id)}
+              style={[
+                styles.category,
+                { backgroundColor: randomColors[index % randomColors.length] },
+              ]}
+            >
+              <Text style={styles.categoryText}>{cat.name}</Text>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
       {(groupId !== 'General' || isAdmin) && (
         <TouchableOpacity
