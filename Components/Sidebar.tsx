@@ -1,13 +1,29 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native'
-import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from 'react-native'
+import {
+  DrawerContentScrollView,
+  DrawerItemList,
+} from '@react-navigation/drawer'
 import { useFocusEffect } from '@react-navigation/native'
 import { auth, db } from '../firebase'
 import { fetchUserById } from '../Services'
 import { getUserQuickStats } from '../Services'
 
 // NEW: realtime imports
-import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore'
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  getDocs,
+} from 'firebase/firestore'
 import { requestPasswordReset, deleteOwnAccount } from '../Services'
 
 type Stats = { groupsCount: number; postsCount: number; avgRating: number }
@@ -15,8 +31,14 @@ type Stats = { groupsCount: number; postsCount: number; avgRating: number }
 const Sidebar = (props: any) => {
   const user = auth.currentUser
   const [username, setUsername] = useState<string>('')
-  const [photoURL, setPhotoURL] = useState<string | undefined>(user?.photoURL || undefined)
-  const [stats, setStats] = useState<Stats>({ groupsCount: 0, postsCount: 0, avgRating: 0 })
+  const [photoURL, setPhotoURL] = useState<string | undefined>(
+    user?.photoURL || undefined
+  )
+  const [stats, setStats] = useState<Stats>({
+    groupsCount: 0,
+    postsCount: 0,
+    avgRating: 0,
+  })
 
   const email = user?.email || ''
 
@@ -71,7 +93,10 @@ const Sidebar = (props: any) => {
         let count = 0
         for (const rec of recSnap.docs) {
           const rSnap = await getDocs(
-            query(collection(db, 'ratings'), where('recommendation_id', '==', rec.id))
+            query(
+              collection(db, 'ratings'),
+              where('recommendation_id', '==', rec.id)
+            )
           )
           rSnap.forEach((d) => {
             const r = (d.data() as any).rating
@@ -98,7 +123,10 @@ const Sidebar = (props: any) => {
   )
 
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ paddingBottom: 20 }}>
+    <DrawerContentScrollView
+      {...props}
+      contentContainerStyle={{ paddingBottom: 20 }}
+    >
       <View style={styles.header}>
         {photoURL ? (
           <Image source={{ uri: photoURL }} style={styles.avatar} />
@@ -123,7 +151,7 @@ const Sidebar = (props: any) => {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.groupsCount}</Text>
-          <Text style={styles.statLabel}>Joined</Text>
+          <Text style={styles.statLabel}>Groups</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.postsCount}</Text>
@@ -131,7 +159,9 @@ const Sidebar = (props: any) => {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>
-            {Number.isFinite(stats.avgRating) ? stats.avgRating.toFixed(1) : '0.0'}
+            {Number.isFinite(stats.avgRating)
+              ? stats.avgRating.toFixed(1)
+              : '0.0'}
           </Text>
           <Text style={styles.statLabel}>Avg ★</Text>
         </View>
@@ -174,7 +204,10 @@ const Sidebar = (props: any) => {
                   onPress: async () => {
                     try {
                       await deleteOwnAccount()
-                      props.navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+                      props.navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' }],
+                      })
                     } catch (e: any) {
                       Alert.alert('Error', e?.message || 'Delete failed.')
                     }
@@ -184,7 +217,9 @@ const Sidebar = (props: any) => {
             )
           }
         >
-          <Text style={[styles.actionTxt, { color: '#fff' }]}>Delete account</Text>
+          <Text style={[styles.actionTxt, { color: '#fff' }]}>
+            Delete account
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -216,8 +251,17 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     gap: 12,
   },
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#e5e7eb' },
-  avatarFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1f2937' },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#e5e7eb',
+  },
+  avatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1f2937',
+  },
   avatarFallbackText: { color: 'white', fontWeight: '700', fontSize: 18 },
 
   username: { fontSize: 18, fontWeight: '700', color: '#0f172a' },

@@ -22,6 +22,7 @@ import GroupsInfo from './Components/GroupsInfo'
 import { OpenGroupScreen } from './Components/GroupsInfo'
 import Sidebar from './Components/Sidebar'
 import EditProfile from './Components/EditProfile'
+import { Toast } from 'react-native-toast-message/lib/src/Toast'
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -108,6 +109,7 @@ export default function App() {
         </NavigationContainer>
       </SafeAreaView>
       <StatusBar style="auto" />
+      <Toast />
     </>
   )
 }

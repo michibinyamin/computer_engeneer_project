@@ -29,6 +29,7 @@ import {
 import * as WebBrowser from 'expo-web-browser'
 import * as Google from 'expo-auth-session/providers/google'
 import { makeRedirectUri } from 'expo-auth-session'
+import Toast from 'react-native-toast-message'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -100,7 +101,13 @@ const Login = ({
       }
 
       await signInWithEmailAndPassword(auth, email, password)
-      Alert.alert('Success', `Welcome back, ${userData.username || 'user'}!`)
+      Toast.show({
+        type: 'success',
+        text1: `Welcome back, ${userData.username || 'user'}!`,
+        position: 'top',
+        visibilityTime: 2000, // disappears after 2 seconds
+      })
+      //Alert.alert('Success', `Welcome back, ${userData.username || 'user'}!`)
       navigation.navigate('Tabs')
     } catch (error: any) {
       console.error('Login Error:', error.message)

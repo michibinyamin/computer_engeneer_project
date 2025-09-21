@@ -42,6 +42,7 @@ import {
 } from 'firebase/firestore'
 
 import * as Location from 'expo-location'
+import { Toast } from 'react-native-toast-message/lib/src/Toast'
 
 const COLORS = [
   'black',
@@ -374,9 +375,15 @@ const EditableRecommendation = () => {
       'rating'
     )
     setShowRating(false)
-    Alert.alert(
-      result ? 'Thank you for your rating!' : 'Your rate has been updated.'
-    )
+    Toast.show({
+      type: 'success',
+      text1: `${rate} stars submitted successfully!`,
+      position: 'top',
+      visibilityTime: 2000, // disappears after 2 seconds
+    })
+    // Alert.alert(
+    //   result ? 'Thank you for your rating!' : 'Your rate has been updated.'
+    // )
   }
 
   const formatDate = (ts: any) => {

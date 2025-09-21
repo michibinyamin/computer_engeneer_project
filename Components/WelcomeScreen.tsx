@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'flex-start',
-    marginTop: 60,
+    marginTop: 20,
   },
   logo: {
     width: 120,
