@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ImageBackground,
 } from 'react-native'
 import {
   signInWithEmailAndPassword,
@@ -167,61 +168,76 @@ const Login = ({
   }, [response])
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login to RecoMate</Text>
+    <ImageBackground
+      source={require('../assets/background1.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Login to RecoMate</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        autoCapitalize="none"
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          autoCapitalize="none"
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
-        <Text style={styles.link}>Forgot Password?</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
+          <Text style={styles.link}>Forgot Password?</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
 
-      {/* NEW: Google button */}
-      <TouchableOpacity
-        style={[styles.button, styles.googleBtn]}
-        onPress={handleGoogle}
-        disabled={!request}
-      >
-        <Text style={styles.buttonText}>Continue with Google</Text>
-      </TouchableOpacity>
+        {/* NEW: Google button */}
+        <TouchableOpacity
+          style={[styles.button, styles.googleBtn]}
+          onPress={handleGoogle}
+          disabled={!request}
+        >
+          <Text style={styles.buttonText}>Continue with Google</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.switchText}>
-          Don't have an account? <Text style={styles.link}>Sign Up</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.switchText}>
+            Don't have an account? <Text style={styles.link}>Sign Up</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 40 },
+  container: {
+    padding: 20,
+    paddingTop: 40,
+    flex: 1,
+    justifyContent: 'flex-start', // Move content to the top
+    marginTop: 20, // Add space from the top
+  },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: 'darkblue',
+    color: 'white', // Changed to white
     textAlign: 'center',
     marginBottom: 25,
+    textShadowColor: 'rgba(0,0,0,0.7)', // Add shadow for contrast
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   input: {
     height: 50,
@@ -230,7 +246,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     fontSize: 16,
+    color: '#222', // Dark text for input
   },
   button: {
     backgroundColor: 'darkblue',
@@ -238,11 +256,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginVertical: 10,
+    elevation: 2,
   },
   googleBtn: { backgroundColor: '#4285F4' },
-  buttonText: { color: 'white', fontSize: 18 },
-  switchText: { textAlign: 'center', fontSize: 16, color: '#555' },
-  link: { textAlign: 'center', color: 'darkblue', fontWeight: 'bold' },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  switchText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: 'white', // White for better contrast
+    marginTop: 10,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  link: {
+    textAlign: 'center',
+    color: '#FFD93D', // Bright yellow for links
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
 })
 
 export default Login

@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ImageBackground,
 } from 'react-native'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, db } from '../firebase'
@@ -93,97 +94,122 @@ const Register = ({
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Join RecoMate</Text>
+    <ImageBackground
+      source={require('../assets/background1.png')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Join RecoMate</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={formData.username}
-        onChangeText={(text) => setFormData({ ...formData, username: text })}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={formData.username}
+          onChangeText={(text) => setFormData({ ...formData, username: text })}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          keyboardType="email-address"
+          value={formData.email}
+          onChangeText={(text) => setFormData({ ...formData, email: text })}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={formData.password}
+          onChangeText={(text) => setFormData({ ...formData, password: text })}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={formData.confirmPassword}
-        onChangeText={(text) =>
-          setFormData({ ...formData, confirmPassword: text })
-        }
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          secureTextEntry
+          value={formData.confirmPassword}
+          onChangeText={(text) =>
+            setFormData({ ...formData, confirmPassword: text })
+          }
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Create Account</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Create Account</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>
-          Already have an account? <Text style={styles.loginLink}>Sign In</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.switchText}>
+            Already have an account? <Text style={styles.link}>Sign In</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    padding: 20,
+    paddingTop: 40,
+    flex: 1,
+    justifyContent: 'flex-start',
+    marginTop: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: 'darkblue',
+    color: 'white',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    paddingHorizontal: 15,
     marginBottom: 15,
+    borderRadius: 8,
     fontSize: 16,
+    color: '#222',
   },
   button: {
     backgroundColor: 'darkblue',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
+    marginVertical: 10,
+    elevation: 2,
   },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  loginText: {
+  switchText: {
     textAlign: 'center',
-    marginTop: 15,
     fontSize: 16,
-    color: '#666',
+    color: 'white',
+    marginTop: 10,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  loginLink: {
-    color: 'darkblue',
+  link: {
+    textAlign: 'center',
+    color: '#FFD93D',
     fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 })
 
