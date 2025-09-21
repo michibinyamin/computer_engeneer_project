@@ -11,7 +11,11 @@ import {
   Image,
   Animated,
 } from 'react-native'
-import { fetchRecommendations } from '../Services'
+import {
+  fetchRecommendations,
+  fetchRatingsByRecommendation,
+  fetchRatingsByRecommendationCount,
+} from '../Services'
 import {
   useNavigation,
   useRoute,
@@ -62,6 +66,8 @@ const RecommendationList = ({
       location?: string
       created_by?: string
       color?: string
+      avgRating?: number
+      ratingCount?: number
     }[]
   >([])
 
@@ -69,6 +75,7 @@ const RecommendationList = ({
   const [opacityAnim] = useState(new Animated.Value(0))
   const firstRender = useRef(true)
   const [catName, setCatName] = useState('')
+  const [ratings, setRatings] = useState<string>('No Rating')
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(() => {
@@ -81,12 +88,26 @@ const RecommendationList = ({
     const user = auth.currentUser
     if (!user) return
     const Recommendations = await fetchRecommendations(category_id)
-    setOptions(
-      Recommendations.map((r: any, idx: number) => ({
-        ...r,
-        color: r.color || COLORS[idx % COLORS.length],
-      }))
+    const optionsWithRatings = await Promise.all(
+      Recommendations.map(async (r: any, idx: number) => {
+        const avgRating = await fetchRatingsByRecommendation(r.recoId)
+        const ratingCount = await fetchRatingsByRecommendationCount(r.recoId)
+        return {
+          ...r,
+          color: r.color || COLORS[idx % COLORS.length],
+          avgRating,
+          ratingCount,
+        }
+      })
     )
+    // Sort: highest avgRating first, then by ratingCount
+    optionsWithRatings.sort((a, b) => {
+      if ((b.avgRating ?? 0) !== (a.avgRating ?? 0)) {
+        return (b.avgRating ?? 0) - (a.avgRating ?? 0)
+      }
+      return (b.ratingCount ?? 0) - (a.ratingCount ?? 0)
+    })
+    setOptions(optionsWithRatings)
   }
 
   // Animate ONLY on first mount, not when navigating back
@@ -172,6 +193,29 @@ const RecommendationList = ({
                     style={styles.tileImage}
                     resizeMode="cover"
                   />
+                ) : null}
+                {option.avgRating !== undefined &&
+                option.ratingCount !== undefined ? (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                      borderRadius: 12,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Ionicons name="star" size={14} color="gold" />
+                    <Text
+                      style={{ color: 'white', marginLeft: 4, fontSize: 12 }}
+                    >
+                      {option.avgRating.toFixed(1)} ({option.ratingCount})
+                    </Text>
+                  </View>
                 ) : null}
                 <View style={styles.titleOverlay}>
                   <Text style={styles.buttonText}>{option.title}</Text>

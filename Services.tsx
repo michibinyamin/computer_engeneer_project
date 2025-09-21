@@ -15,7 +15,6 @@ import { db, auth } from './firebase'
 import { sendPasswordResetEmail, User } from 'firebase/auth'
 import { deleteUser } from 'firebase/auth'
 
-
 /* =========================
  * USERS
  * =======================*/
@@ -27,20 +26,24 @@ export const fetchUsers = async () => {
 export const fetchUserById = async (userId: string) => {
   if (!userId) return null
   const userDoc = await getDoc(doc(db, 'users', userId))
-  return userDoc.exists() ? { id: userDoc.id, ...(userDoc.data() as any) } : null
+  return userDoc.exists()
+    ? { id: userDoc.id, ...(userDoc.data() as any) }
+    : null
 }
 
 export const fetchUserNameById = async (userId: string | undefined = '') => {
   if (!userId) return ''
   const userDoc = await getDoc(doc(db, 'users', userId))
-  return userDoc.exists() ? ((userDoc.data() as any).username || '') : ''
+  return userDoc.exists() ? (userDoc.data() as any).username || '' : ''
 }
 
 export const fetchUserNameFromRecommendation = async (
   recommendationId: string | undefined
 ) => {
   if (!recommendationId) return ''
-  const recommendationDoc = await getDoc(doc(db, 'recommendations', recommendationId))
+  const recommendationDoc = await getDoc(
+    doc(db, 'recommendations', recommendationId)
+  )
   if (!recommendationDoc.exists()) return ''
   const createdBy = (recommendationDoc.data() as any).created_by
   return await fetchUserNameById(createdBy)
@@ -70,7 +73,10 @@ export const deleteUsersByIds = async (userIds: string[]) => {
 export const fetchRecommendations = async (category_id: string | undefined) => {
   if (!category_id) return []
   const snap = await getDocs(
-    query(collection(db, 'recommendations'), where('category_id', '==', category_id))
+    query(
+      collection(db, 'recommendations'),
+      where('category_id', '==', category_id)
+    )
   )
   return snap.docs.map((d) => {
     const data = d.data() as any
@@ -195,24 +201,35 @@ export const addRating = async (
   return true
 }
 
+// returns average rating (or 0 if none)
 export const fetchRatingsByRecommendation = async (
   recommendationId: string | undefined
 ): Promise<number> => {
   if (!recommendationId) return 0
   const snap = await getDocs(
-    query(collection(db, 'ratings'), where('recommendation_id', '==', recommendationId))
+    query(
+      collection(db, 'ratings'),
+      where('recommendation_id', '==', recommendationId)
+    )
   )
   if (snap.empty) return 0
-  const total = snap.docs.reduce((sum, d) => sum + ((d.data() as any).rating || 0), 0)
+  const total = snap.docs.reduce(
+    (sum, d) => sum + ((d.data() as any).rating || 0),
+    0
+  )
   return total / snap.size
 }
 
+// returns the amount of people who rated (or 0 if none)
 export const fetchRatingsByRecommendationCount = async (
   recommendationId: string | undefined
 ): Promise<number> => {
   if (!recommendationId) return 0
   const snap = await getDocs(
-    query(collection(db, 'ratings'), where('recommendation_id', '==', recommendationId))
+    query(
+      collection(db, 'ratings'),
+      where('recommendation_id', '==', recommendationId)
+    )
   )
   return snap.size
 }
@@ -223,7 +240,11 @@ export const fetchRatingsByRecommendationCount = async (
 
 /* Promote & remove (used by Members screen 3-dots) */
 export const promoteMemberToAdmin = async (membershipDocId: string) => {
-  await setDoc(doc(db, 'membership', membershipDocId), { role: 'Admin' }, { merge: true })
+  await setDoc(
+    doc(db, 'membership', membershipDocId),
+    { role: 'Admin' },
+    { merge: true }
+  )
 }
 
 export const removeMemberByDocId = async (membershipDocId: string) => {
@@ -253,7 +274,6 @@ export const removeMemberByDocId = async (membershipDocId: string) => {
     await assignRandomAdmin(groupId)
   }
 }
-
 
 /* Cascade delete an entire group and related data */
 export const deleteGroupCascade = async (groupId: string) => {
@@ -394,7 +414,9 @@ export const assignRandomAdmin = async (groupId: string) => {
   if (restSnap.empty) return // nothing to assign
 
   // If an admin already exists, do nothing
-  const someoneIsAdmin = restSnap.docs.some((d) => (d.data() as any).role === 'Admin')
+  const someoneIsAdmin = restSnap.docs.some(
+    (d) => (d.data() as any).role === 'Admin'
+  )
   if (someoneIsAdmin) return
 
   // Pick a random member and promote
