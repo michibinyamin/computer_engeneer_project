@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "RecoMate",
+    "name": "RecoMateDevelopment",
     "slug": "recomate",
+    "icon": "./assets/icon.png",
     "version": "1.0.0",
     "newArchEnabled": true,
     "scheme": "recomate",

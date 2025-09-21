@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, StyleSheet, View, Text } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createDrawerNavigator } from '@react-navigation/drawer'
+import { onAuthStateChanged, User } from 'firebase/auth'
+import { auth } from './firebase'
 
 import Register from './Components/Register'
 import Login from './Components/Login'
@@ -33,7 +34,6 @@ function CustomHeader() {
   )
 }
 
-/** Drawer that wraps ONLY the main Tabs UI (not Login/Register/Welcome) */
 function TabsWithDrawer() {
   return (
     <Drawer.Navigator
@@ -46,21 +46,38 @@ function TabsWithDrawer() {
 }
 
 export default function App() {
+  const [user, setUser] = useState<User | null | undefined>(undefined)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser)
+    })
+    return unsubscribe
+  }, [])
+
+  if (user === undefined) {
+    // Show loading spinner while checking auth state
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="darkblue" />
+      </View>
+    )
+  }
+
   return (
     <>
       <SafeAreaView style={styles.container}>
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName="Welcome"
+            initialRouteName={user ? 'Tabs' : 'Welcome'}
             screenOptions={({ route }) => ({
-              // Show our custom header on most screens except those that render their own top UI
               header: () =>
                 route.name !== 'Tabs' &&
                 route.name !== 'EditableRecommendation' &&
                 route.name !== 'Members' &&
                 route.name !== 'AdminUsersScreen' &&
                 route.name !== 'OpenGroup' &&
-                route.name !== 'EditProfile' && <CustomHeader />, // hide header for the direct group page
+                route.name !== 'EditProfile' && <CustomHeader />,
             })}
           >
             {/* Auth / pre-app screens (no drawer here) */}
@@ -98,6 +115,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'white',
   },
   header: {

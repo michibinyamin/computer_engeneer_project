@@ -51,6 +51,7 @@ const COLORS = [
   '#166EAF', // Darker Sky Blue
   '#CC7035', // Darker Orange
   '#7C48B8', // Darker Purple
+  '#FF69B4', // Hot Pink
 ]
 
 type RouteParams = {
@@ -771,8 +772,15 @@ const styles = StyleSheet.create({
   divider: {
     height: 4,
     width: '100%',
+    alignSelf: 'center',
     borderRadius: 2,
     marginVertical: 16,
+    backgroundColor: 'linear-gradient(90deg, #ff7eb3, #ff758c, #ff7eb3)', // if using expo-linear-gradient
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     fontSize: 16,
@@ -810,16 +818,17 @@ const styles = StyleSheet.create({
   },
   colorPickerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginVertical: 10,
     width: '70%',
     alignSelf: 'center',
   },
+
   colorCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    marginHorizontal: 4,
+    marginHorizontal: 3, // spacing between circles
   },
 
   // Save button inside the panel (add/edit screen)

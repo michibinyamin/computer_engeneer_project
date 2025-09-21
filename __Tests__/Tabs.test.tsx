@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
-import Tabs from '../Components/MainContainer'
+import MainContainer from '../Components/MainContainer'
 import { NavigationContainer } from '@react-navigation/native'
 
 // Mock subcomponents
@@ -12,8 +12,8 @@ describe('Tabs Component', () => {
   it('renders all tab buttons', () => {
     const { getByText } = render(
       <NavigationContainer>
-        <Tabs />
-      </NavigationContainer>,
+        <MainContainer />
+      </NavigationContainer>
     )
 
     expect(getByText('General')).toBeTruthy()
@@ -24,8 +24,8 @@ describe('Tabs Component', () => {
   it('changes tab when buttons are pressed', () => {
     const { getByText } = render(
       <NavigationContainer>
-        <Tabs />
-      </NavigationContainer>,
+        <MainContainer />
+      </NavigationContainer>
     )
 
     fireEvent.press(getByText('Groups'))
