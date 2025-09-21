@@ -1,30 +1,57 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
 } from 'react-native'
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth'
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
+} from 'firebase/auth'
 import { auth, db } from '../firebase'
-import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from 'firebase/firestore'
 
 // ✅ NEW: AuthSession (Expo)
 import * as WebBrowser from 'expo-web-browser'
 import * as Google from 'expo-auth-session/providers/google'
 import { makeRedirectUri } from 'expo-auth-session'
 
-
 WebBrowser.maybeCompleteAuthSession()
 
-const Login = ({ navigation }: { navigation: { navigate: (screen: string) => void; goBack: () => void } }) => {
+const Login = ({
+  navigation,
+}: {
+  navigation: { navigate: (screen: string) => void; goBack: () => void }
+}) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   // ⚠️ Paste your real client IDs here (from Google Cloud OAuth)
-  const config = useMemo(() => ({
-    // Expo Go / Proxy will primarily use the webClientId
-    webClientId:     '460576278701-ko1sgndmfhnddlkvnsu329h49lu9rv38.apps.googleusercontent.com',
-    androidClientId: '460576278701-andnfn632315ei16jvvgjhaofgdkpidb.apps.googleusercontent.com',
-    iosClientId:     '460576278701-2b4im98505eg1mlrhtg3c0frmss4va3h.apps.googleusercontent.com'
-  }), [])
+  const config = useMemo(
+    () => ({
+      // Expo Go / Proxy will primarily use the webClientId
+      webClientId:
+        '460576278701-ko1sgndmfhnddlkvnsu329h49lu9rv38.apps.googleusercontent.com',
+      androidClientId:
+        '460576278701-andnfn632315ei16jvvgjhaofgdkpidb.apps.googleusercontent.com',
+      iosClientId:
+        '460576278701-2b4im98505eg1mlrhtg3c0frmss4va3h.apps.googleusercontent.com',
+    }),
+    []
+  )
 
   // Request for Google auth (use proxy in Expo Go)
   // Compute the redirect URI once. In Expo Go, this will be of the form
@@ -64,7 +91,10 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
       const userData = snapshot.docs[0].data()
       const userStatus = userData.status
       if (!userStatus || userStatus !== 'active') {
-        Alert.alert('Access Denied', `Your account is ${userStatus || 'unavailable'}.`)
+        Alert.alert(
+          'Access Denied',
+          `Your account is ${userStatus || 'unavailable'}.`
+        )
         return
       }
 
@@ -92,7 +122,9 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
       }
 
       // Retrieve the ID token from either result.params or authentication.
-      const idToken = (result.params && (result.params as any).id_token) || result.authentication?.idToken
+      const idToken =
+        (result.params && (result.params as any).id_token) ||
+        result.authentication?.idToken
       if (!idToken) {
         Alert.alert('Google Sign-In error', 'Missing ID token in the response.')
         return
@@ -108,8 +140,12 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
       const snap = await getDoc(userRef)
       if (!snap.exists()) {
         await setDoc(userRef, {
-          uid, email: email ?? '', username: displayName ?? '',
-          status: 'active', provider: 'google', createdAt: serverTimestamp()
+          uid,
+          email: email ?? '',
+          username: displayName ?? '',
+          status: 'active',
+          provider: 'google',
+          createdAt: serverTimestamp(),
         })
       } else {
         // Optionally, keep user active
@@ -161,7 +197,11 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
       </TouchableOpacity>
 
       {/* NEW: Google button */}
-      <TouchableOpacity style={[styles.button, styles.googleBtn]} onPress={handleGoogle} disabled={!request}>
+      <TouchableOpacity
+        style={[styles.button, styles.googleBtn]}
+        onPress={handleGoogle}
+        disabled={!request}
+      >
         <Text style={styles.buttonText}>Continue with Google</Text>
       </TouchableOpacity>
 
@@ -176,12 +216,29 @@ const Login = ({ navigation }: { navigation: { navigate: (screen: string) => voi
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 40 },
-  title: { fontSize: 22, fontWeight: 'bold', color: 'darkblue', textAlign: 'center', marginBottom: 25 },
-  input: {
-    height: 50, borderWidth: 1, borderColor: '#ccc', paddingHorizontal: 15,
-    marginBottom: 15, borderRadius: 8, fontSize: 16
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'darkblue',
+    textAlign: 'center',
+    marginBottom: 25,
   },
-  button: { backgroundColor: 'darkblue', padding: 15, borderRadius: 8, alignItems: 'center', marginVertical: 10 },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 8,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: 'darkblue',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
   googleBtn: { backgroundColor: '#4285F4' },
   buttonText: { color: 'white', fontSize: 18 },
   switchText: { textAlign: 'center', fontSize: 16, color: '#555' },

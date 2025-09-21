@@ -3,58 +3,23 @@
     "name": "RecoMate",
     "slug": "recomate",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/Logo.png",
-    "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.MOA.recomate",
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "infoPlist": {
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
-        "SKAdNetworkItems": [
-          {
-            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
-          },
-          {
-            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
-          },
-          {
-            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
-          },
-          {
-            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
-          }
-        ],
-        "ITSAppUsesNonExemptEncryption": false
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.MOA.recomate",
-      "googleServicesFile": "./google-services.json",
-      "permissions": ["ACCESS_FINE_LOCATION"]
-    },
+    "scheme": "recomate",
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-secure-store",
-      "@react-native-google-signin/google-signin"
-    ],
     "extra": {
       "eas": {
         "projectId": "972e8a23-641e-4240-a909-b854cf827140"
       }
+    },
+    "ios": {
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show nearby places."
+      }
+    },
+    "android": {
+      "permissions": ["ACCESS_FINE_LOCATION"]
     }
   }
 }

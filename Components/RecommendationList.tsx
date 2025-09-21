@@ -20,6 +20,7 @@ import {
 import { auth, db } from '../firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { Ionicons } from '@expo/vector-icons'
+import * as Location from 'expo-location'
 
 const COLORS = [
   'black',
@@ -34,9 +35,14 @@ const COLORS = [
 const RecommendationList = ({
   category_id,
   setCatEntered,
+  myLocation,
 }: {
   category_id: any
   setCatEntered: (id: string) => void
+  myLocation: {
+    latitude: number
+    longitude: number
+  } | null
 }) => {
   useFocusEffect(
     React.useCallback(() => {
@@ -156,6 +162,7 @@ const RecommendationList = ({
                     color: option.color,
                     created_by: option.created_by,
                     viewMode: 'view',
+                    myLocation: myLocation,
                   })
                 }
               >

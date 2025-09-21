@@ -60,11 +60,7 @@ export default function App() {
                 route.name !== 'Members' &&
                 route.name !== 'AdminUsersScreen' &&
                 route.name !== 'OpenGroup' &&
-                route.name !== 'EditProfile' &&
-
-                 ( // hide header for the direct group page
-                  <CustomHeader />
-                ),
+                route.name !== 'EditProfile' && <CustomHeader />, // hide header for the direct group page
             })}
           >
             {/* Auth / pre-app screens (no drawer here) */}
@@ -84,12 +80,13 @@ export default function App() {
             <Stack.Screen name="Members" component={Members} />
             <Stack.Screen name="ManagePanel" component={ManagePanel} />
             <Stack.Screen name="UsersInfo" component={UsersInfo} />
-            <Stack.Screen name="AdminUsersScreen" component={AdminUsersScreen} />
+            <Stack.Screen
+              name="AdminUsersScreen"
+              component={AdminUsersScreen}
+            />
             <Stack.Screen name="GroupsInfo" component={GroupsInfo} />
             <Stack.Screen name="OpenGroup" component={OpenGroupScreen} />
             <Stack.Screen name="EditProfile" component={EditProfile} />
-
-             
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

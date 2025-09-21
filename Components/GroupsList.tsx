@@ -16,7 +16,14 @@ import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 import Catagorys from './Catagorys'
 
-const GroupsList = () => {
+const GroupsList = ({
+  myLocation,
+}: {
+  myLocation: {
+    latitude: number
+    longitude: number
+  } | null
+}) => {
   const [options, setOptions] = useState<{ id: string; name: string }[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [groupName, setGroupName] = useState('')
@@ -147,7 +154,11 @@ const GroupsList = () => {
         transform: [{ scale: scaleAnimEntered }],
       }}
     >
-      <Catagorys groupId={groupEntered} setGroupEntered={setGroupEntered} />
+      <Catagorys
+        groupId={groupEntered}
+        setGroupEntered={setGroupEntered}
+        myLocation={myLocation}
+      />
     </Animated.View>
   ) : (
     <Animated.View

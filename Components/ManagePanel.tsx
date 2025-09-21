@@ -14,8 +14,8 @@ const ManagePanel = () => {
   }
 
   const goToReports = () => {
-  navigation.navigate('ReportsScreen')
-}
+    navigation.navigate('ReportsScreen')
+  }
 
   return (
     <View style={styles.container}>

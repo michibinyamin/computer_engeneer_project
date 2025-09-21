@@ -3,7 +3,14 @@ import Catagorys from './Catagorys'
 import { auth } from '../firebase'
 import { Animated } from 'react-native'
 
-const PersonalList = () => {
+const PersonalList = ({
+  myLocation,
+}: {
+  myLocation: {
+    latitude: number
+    longitude: number
+  } | null
+}) => {
   const user = auth.currentUser
   const [scaleAnim] = useState(new Animated.Value(0.8))
   const [opacityAnim] = useState(new Animated.Value(0))
@@ -35,7 +42,7 @@ const PersonalList = () => {
         transform: [{ scale: scaleAnim }],
       }}
     >
-      <Catagorys groupId={user.uid} />
+      <Catagorys groupId={user.uid} myLocation={myLocation} />
     </Animated.View>
   )
 }

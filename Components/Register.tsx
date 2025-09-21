@@ -34,7 +34,7 @@ const Register = ({
       const userRef = collection(db, 'users')
       const usernameQuery = query(
         userRef,
-        where('username', '==', formData.username),
+        where('username', '==', formData.username)
       )
       const querySnapshot = await getDocs(usernameQuery)
 
@@ -72,7 +72,7 @@ const Register = ({
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
-        formData.password,
+        formData.password
       )
 
       const user = userCredential.user

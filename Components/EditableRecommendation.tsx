@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import {
   View,
   Text,
@@ -63,6 +63,10 @@ type RouteParams = {
   color?: string
   created_by?: string
   viewMode?: 'view' | 'edit' | 'new'
+  myLocation?: {
+    latitude: number
+    longitude: number
+  } | null
 }
 
 const EditableRecommendation = () => {
@@ -78,6 +82,7 @@ const EditableRecommendation = () => {
     color = '#ff6f00',
     created_by: initialCreatedBy = '',
     viewMode = 'view',
+    myLocation = null,
   } = route.params as RouteParams
 
   // Core state
@@ -86,10 +91,6 @@ const EditableRecommendation = () => {
   const [content, setContent] = useState(initialContent)
   const [image, setImage] = useState(imageUrl || '')
   const [location, setLocation] = useState(initialLocation)
-  const [myLocation, setMyLocation] = useState<{
-    latitude: number
-    longitude: number
-  } | null>(null)
   const [selectedColor, setSelectedColor] = useState(color)
   const [recoId, setRecommendationId] = useState(initialRecommendationId)
   const [creatorId, setCreatorId] = useState(initialCreatedBy)
@@ -105,75 +106,41 @@ const EditableRecommendation = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const canEdit = isPublisher || isAdmin
 
-  // const requestLocationPermission = async () => {
-  //   if (Platform.OS === 'android') {
-  //     const granted = await PermissionsAndroid.request(
-  //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-  //     )
-  //     return granted === PermissionsAndroid.RESULTS.GRANTED
-  //   }
-  //   return true
-  // }
+  // const [myLocation, setMyLocation] = useState<{
+  //   latitude: number
+  //   longitude: number
+  // } | null>(null)
+
   // useEffect(() => {
-  //   console.log('Location useEffect running...')
-  //   requestLocationPermission().then((granted) => {
-  //     console.log('Permission result:', granted)
-  //     if (granted) {
-  //       Geolocation.getCurrentPosition(
-  //         (position) => {
-  //           const { latitude, longitude } = position.coords
-  //           setMyLocation({ latitude, longitude })
-  //           console.log('Current position:', latitude, longitude)
-  //         },
-  //         (error) => console.error('Geolocation error:', error),
-  //         { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+  //   const getLocation = async () => {
+  //     try {
+  //       const { status } = await Location.getForegroundPermissionsAsync()
+
+  //       if (status !== 'granted') {
+  //         const request = await Location.requestForegroundPermissionsAsync()
+  //         if (request.status !== 'granted') {
+  //           console.warn('Permission not granted')
+  //           return
+  //         }
+  //       }
+
+  //       const location = await Location.getCurrentPositionAsync({})
+  //       setMyLocation({
+  //         latitude: location.coords.latitude,
+  //         longitude: location.coords.longitude,
+  //       })
+  //       console.log(
+  //         'current location:',
+  //         location.coords.latitude,
+  //         ',',
+  //         location.coords.longitude
   //       )
-  //     } else {
-  //       console.warn('Location permission not granted')
+  //     } catch (err) {
+  //       console.error('Error:', err)
   //     }
-  //   })
-  // }, [])
+  //   }
 
-  useEffect(() => {
-    const getLocation = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync()
-        if (status !== 'granted') {
-          console.warn('Location permission not granted')
-          return
-        }
-        //const location = await Location.getCurrentPositionAsync({})
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        })
-
-        setMyLocation({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        })
-        console.log(
-          'Current position:',
-          location.coords.latitude,
-          location.coords.longitude
-        )
-      } catch (error) {
-        console.error('Error getting location:', error)
-      }
-    }
-    getLocation()
-  }, [])
-
-  // // Get current location on mount
-  // useEffect(() => {
-  //   navigator.geolocation.getCurrentPosition(
-  //     (position) => {
-  //       const { latitude, longitude } = position.coords
-  //       setMyLocation({ latitude, longitude })
-  //       console.log('Current position:', latitude, longitude)
-  //     },
-  //     (error) => console.error('Error getting location:', error),
-  //     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-  //   )
+  //   getLocation()
   // }, [])
 
   // Comments

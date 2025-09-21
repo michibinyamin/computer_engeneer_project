@@ -2,7 +2,14 @@ import React, { useEffect, useState } from 'react'
 import Catagorys from './Catagorys'
 import { Animated } from 'react-native'
 
-const GeneralList = () => {
+const GeneralList = ({
+  myLocation,
+}: {
+  myLocation: {
+    latitude: number
+    longitude: number
+  } | null
+}) => {
   const [scaleAnim] = useState(new Animated.Value(0.8))
   const [opacityAnim] = useState(new Animated.Value(0))
 
@@ -29,7 +36,7 @@ const GeneralList = () => {
         transform: [{ scale: scaleAnim }],
       }}
     >
-      <Catagorys groupId={'General'} />
+      <Catagorys groupId={'General'} myLocation={myLocation} />
     </Animated.View>
   )
 }

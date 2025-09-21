@@ -29,6 +29,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import RecommendationList from './RecommendationList'
 import adminEmails from '../adminEmails.json'
+import * as Location from 'expo-location'
 
 const randomColors = [
   '#cc6666', // darker red
@@ -55,9 +56,14 @@ type RootStackParamList = {
 const Catagorys = ({
   groupId,
   setGroupEntered,
+  myLocation,
 }: {
   groupId: any
   setGroupEntered: (id: string) => void
+  myLocation: {
+    latitude: number
+    longitude: number
+  } | null
 }) => {
   //const options = ['Cooking', 'Hikes', 'Books', 'Movies', 'Music', 'Travel', 'Fitness', 'Art']; // Example options
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
@@ -142,6 +148,7 @@ const Catagorys = ({
     <RecommendationList
       category_id={CatEntered}
       setCatEntered={setCatEntered}
+      myLocation={myLocation}
     />
   ) : (
     <View style={styles.container}>

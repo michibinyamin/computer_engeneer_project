@@ -17,6 +17,7 @@ import PersonalList from './PersonalList'
 import ManagePanel from './ManagePanel'
 import { auth } from '../firebase'
 import adminEmails from '../adminEmails.json'
+import * as Location from 'expo-location'
 
 type TabKey = 'General' | 'Groups' | 'Personal' | 'Manage'
 
@@ -28,6 +29,43 @@ const MainContainer = ({ route }: any) => {
 
   const scaleAnim = useState(new Animated.Value(0.8))[0]
   const opacityAnim = useState(new Animated.Value(0))[0]
+
+  const [myLocation, setMyLocation] = useState<{
+    latitude: number
+    longitude: number
+  } | null>(null)
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync()
+
+        if (status !== 'granted') {
+          const request = await Location.requestForegroundPermissionsAsync()
+          if (request.status !== 'granted') {
+            console.warn('Permission not granted')
+            return
+          }
+        }
+
+        const location = await Location.getCurrentPositionAsync({})
+        setMyLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        })
+        console.log(
+          'current location:',
+          location.coords.latitude,
+          ',',
+          location.coords.longitude
+        )
+      } catch (err) {
+        console.error('Error:', err)
+      }
+    }
+
+    getLocation()
+  }, [])
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -68,11 +106,11 @@ const MainContainer = ({ route }: any) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'General':
-        return <GeneralList />
+        return <GeneralList myLocation={myLocation} />
       case 'Groups':
-        return <GroupsList />
+        return <GroupsList myLocation={myLocation} />
       case 'Personal':
-        return <PersonalList />
+        return <PersonalList myLocation={myLocation} />
       case 'Manage':
         return <ManagePanel />
       default:
@@ -158,7 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: 5,
     paddingBottom: 5,
-    paddingLeft: 48,        // <- pushes tabs to the right of the hamburger
+    paddingLeft: 48, // <- pushes tabs to the right of the hamburger
     paddingRight: 8,
     backgroundColor: 'rgba(26, 46, 64, 0.6)',
     shadowColor: '#000',
