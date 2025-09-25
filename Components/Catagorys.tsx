@@ -25,6 +25,7 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
+  updateDoc,
 } from 'firebase/firestore'
 import { Ionicons } from '@expo/vector-icons'
 import RecommendationList from './RecommendationList'
@@ -73,7 +74,9 @@ const Catagorys = ({
   const [groupName, setGroupName] = useState('')
   const [categories, setCategories] = useState<any[]>([])
   const [categoryModal, setCategoryModal] = useState(false)
+  const [categoryEditModal, setCategoryEditModal] = useState(false)
   const [categoryName, setCategoryName] = useState('')
+  const [category_id, setCategory_id] = useState('') // Id here for long press passing
   const [CatEntered, setCatEntered] = useState('') // Id will be here
   const [IsGroup, setIsGroup] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -116,15 +119,45 @@ const Catagorys = ({
     setCategories(result)
   }
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = async (id?: string) => {
     if (!categoryName.trim()) return
-    await addDoc(collection(db, 'catagory'), {
-      name: categoryName,
-      groupId,
-    })
-    setCategoryModal(false)
+
+    if (id) {
+      // editing existing category
+      if (groupId === 'General' && !isAdmin) return
+
+      const categoryRef = doc(db, 'catagory', id)
+      await updateDoc(categoryRef, {
+        name: categoryName,
+        groupId,
+      })
+
+      setCategoryEditModal(false)
+    } else {
+      // adding new category
+      await addDoc(collection(db, 'catagory'), {
+        name: categoryName,
+        groupId,
+      })
+
+      setCategoryModal(false)
+    }
+
     setCategoryName('')
     fetchCategories()
+  }
+
+  const onLongPress = async (id: string, name: string) => {
+    if (groupId === 'General' && !isAdmin) {
+      return
+    }
+    setCategoryName(name)
+    setCategory_id(id)
+    Alert.alert('Edit', 'Do you want to edit or delete this category?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Edit', onPress: () => setCategoryEditModal(true) },
+      { text: 'Delete', onPress: () => handleDeleteCategory(id) },
+    ])
   }
 
   const handleDeleteCategory = async (id: string) => {
@@ -134,7 +167,7 @@ const Catagorys = ({
     Alert.alert('Confirm', 'Are you sure you want to delete this category?', [
       { text: 'Cancel' },
       {
-        text: 'Delete',
+        text: 'Yes',
         style: 'destructive',
         onPress: async () => {
           await deleteDoc(doc(db, 'catagory', id))
@@ -174,7 +207,7 @@ const Catagorys = ({
           .map((cat, index) => (
             <TouchableOpacity
               key={cat.id}
-              onLongPress={() => handleDeleteCategory(cat.id)}
+              onLongPress={() => onLongPress(cat.id, cat.name)}
               onPress={() => setCatEntered(cat.id)}
               style={[
                 styles.category,
@@ -207,11 +240,41 @@ const Catagorys = ({
             />
             <TouchableOpacity
               style={styles.inviteButton}
-              onPress={handleAddCategory}
+              onPress={() => handleAddCategory()}
             >
               <Text style={styles.inviteButtonText}>Add</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setCategoryModal(false)}>
+              <Text
+                style={{ color: 'red', textAlign: 'center', marginTop: 10 }}
+              >
+                Close
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={categoryEditModal}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Category</Text>
+            <TextInput
+              placeholder="Category name"
+              value={categoryName}
+              onChangeText={setCategoryName}
+              style={styles.input}
+            />
+            <TouchableOpacity
+              style={styles.inviteButton}
+              onPress={() => handleAddCategory(category_id)}
+            >
+              <Text style={styles.inviteButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setCategoryEditModal(false)}>
               <Text
                 style={{ color: 'red', textAlign: 'center', marginTop: 10 }}
               >
