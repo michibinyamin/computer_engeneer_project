@@ -23,6 +23,7 @@ import { OpenGroupScreen } from './Components/GroupsInfo'
 import Sidebar from './Components/Sidebar'
 import EditProfile from './Components/EditProfile'
 import { Toast } from 'react-native-toast-message/lib/src/Toast'
+import ReviewingReports from './Components/ReviewingReports'
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -106,6 +107,7 @@ export default function App() {
             <Stack.Screen name="GroupsInfo" component={GroupsInfo} />
             <Stack.Screen name="OpenGroup" component={OpenGroupScreen} />
             <Stack.Screen name="EditProfile" component={EditProfile} />
+            <Stack.Screen name="ReviewingReports" component={ReviewingReports} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>

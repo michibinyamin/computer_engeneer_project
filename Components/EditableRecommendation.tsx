@@ -12,7 +12,7 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native'
-import MapView, { Marker } from 'react-native-maps'
+import ReportModal from './ReportModal'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import {
   addRecommendation,
@@ -41,7 +41,6 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 
-import * as Location from 'expo-location'
 import { Toast } from 'react-native-toast-message/lib/src/Toast'
 
 const COLORS = [
@@ -74,6 +73,15 @@ type RouteParams = {
 const EditableRecommendation = () => {
   const navigation = useNavigation()
   const route = useRoute()
+
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [selectedComment, setSelectedComment] = useState<{
+    id: string
+    userId: string
+    userName: string
+    text: string
+  } | null>(null)
+
   const {
     category_id,
     recommendationId: initialRecommendationId = '',
@@ -673,7 +681,15 @@ const EditableRecommendation = () => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => Alert.alert('Reported')}
+                      onPress={() => {
+                        setSelectedComment({
+                          id: c.id,
+                          userId: c.user_id,
+                          userName: c.username,
+                          text: c.text,
+                        })
+                        setShowReportModal(true)
+                      }}
                       style={styles.commentBtn}
                     >
                       <Ionicons name="flag-outline" size={16} color="orange" />
@@ -730,6 +746,20 @@ const EditableRecommendation = () => {
           </View>
         </View>
       </Modal>
+
+      <ReportModal
+        visible={showReportModal}
+        onClose={() => {
+          setShowReportModal(false)
+          setSelectedComment(null)
+        }}
+        reportedItemType="comment"
+        reportedItemId={selectedComment?.id || ''}
+        reportedUserId={selectedComment?.userId || ''}
+        reportedUserName={selectedComment?.userName || ''}
+        recommendationId={recoId}
+        commentText={selectedComment?.text}
+      />
     </ImageBackground>
   )
 }

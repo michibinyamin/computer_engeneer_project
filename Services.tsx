@@ -10,9 +10,13 @@ import {
   deleteDoc,
   Timestamp,
   writeBatch,
+  updateDoc,
+  serverTimestamp,
+  orderBy,
 } from 'firebase/firestore'
+
 import { db, auth } from './firebase'
-import { sendPasswordResetEmail, User } from 'firebase/auth'
+import { sendPasswordResetEmail,} from 'firebase/auth'
 import { deleteUser } from 'firebase/auth'
 
 /* =========================
@@ -483,4 +487,267 @@ export const deleteOwnAccount = async () => {
 
   // Delete user from Authentication
   await deleteUser(user)
+}
+
+export interface Report {
+  id?: string
+  reporterId: string
+  reporterName: string
+  reportedItemType: 'comment' | 'recommendation'
+  reportedItemId: string
+  reportedUserId: string
+  reportedUserName: string
+  reason: string
+  description: string
+  groupId?: string
+  recommendationId?: string
+  reportedContent?: string
+  adminComment?: string // NEW: Admin's comment on how they handled the report
+  adminCommentAt?: any // NEW: When the admin comment was added
+  adminCommentBy?: string // NEW: Which admin added the comment
+  status: 'pending' | 'reviewed' | 'resolved'
+  createdAt: any
+  reviewedAt?: any
+  reviewedBy?: string
+}
+
+export const REPORT_REASONS = [
+  'Harassment or bullying',
+  'Hate speech',
+  'Spam',
+  'Inappropriate content',
+  'False information',
+  'Privacy violation',
+  'Other',
+]
+
+export const submitReport = async (
+  reportedItemType: 'comment' | 'recommendation',
+  reportedItemId: string,
+  reportedUserId: string,
+  reportedUserName: string,
+  reason: string,
+  description: string,
+  groupId?: string,
+  recommendationId?: string,
+  commentContent?: string // This should contain the actual comment text at time of reporting
+): Promise<boolean> => {
+  try {
+    const user = auth.currentUser
+    if (!user) throw new Error('User not authenticated')
+
+    const userDoc = await getDoc(doc(db, 'users', user.uid))
+    let reporterName = ''
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      reporterName = userData.username || userData.displayName || userData.email
+    }
+
+    // For comments, ensure we capture the content immediately
+    let reportedContent = ''
+    if (reportedItemType === 'comment' && commentContent) {
+      reportedContent = commentContent
+    } else if (reportedItemType === 'comment' && !commentContent) {
+      // Fallback: try to fetch the comment content if not provided
+      try {
+        reportedContent = await fetchCommentContentById(reportedItemId)
+      } catch (error) {
+        console.error('Error fetching comment content for report:', error)
+        reportedContent = 'Content unavailable - comment may have been deleted'
+      }
+    }
+
+    await addDoc(collection(db, 'reports'), {
+      reporterId: user.uid,
+      reporterName,
+      reportedItemType,
+      reportedItemId,
+      reportedUserId,
+      reportedUserName,
+      reason,
+      description,
+      groupId: groupId || null,
+      recommendationId: recommendationId || null,
+      reportedContent: reportedContent || null, // Store the actual content at time of reporting
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      reviewedAt: null,
+      reviewedBy: null,
+    })
+
+    return true
+  } catch (error) {
+    console.error('Error submitting report:', error)
+    return false
+  }
+}
+
+// Add these new functions to Services.tsx to fetch group and recommendation names
+export const fetchGroupNameById = async (groupId: string): Promise<string> => {
+  if (!groupId) return ''
+  try {
+    const groupDoc = await getDoc(doc(db, 'groups', groupId))
+    return groupDoc.exists() ? (groupDoc.data() as any).name || '' : ''
+  } catch (error) {
+    console.error('Error fetching group name:', error)
+    return ''
+  }
+}
+
+export const fetchRecommendationTitleById = async (recommendationId: string): Promise<string> => {
+  if (!recommendationId) return ''
+  try {
+    const recDoc = await getDoc(doc(db, 'recommendations', recommendationId))
+    return recDoc.exists() ? (recDoc.data() as any).title || '' : ''
+  } catch (error) {
+    console.error('Error fetching recommendation title:', error)
+    return ''
+  }
+}
+export const fetchPendingReports = async (): Promise<Report[]> => {
+  try {
+    const q = query(
+      collection(db, 'reports'),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as Report)
+    )
+  } catch (error) {
+    console.error('Error fetching reports:', error)
+    return []
+  }
+}
+
+export const fetchAllReports = async (): Promise<Report[]> => {
+  try {
+    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as Report)
+    )
+  } catch (error) {
+    console.error('Error fetching reports:', error)
+    return []
+  }
+}
+
+export const updateReportStatus = async (
+  reportId: string,
+  status: 'pending' | 'reviewed' | 'resolved',
+  adminId: string
+): Promise<boolean> => {
+  try {
+    const reportRef = doc(db, 'reports', reportId)
+    await updateDoc(reportRef, {
+      status,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminId,
+    })
+    return true
+  } catch (error) {
+    console.error('Error updating report status:', error)
+    return false
+  }
+}
+
+export const getReportsByUser = async (userId: string): Promise<Report[]> => {
+  try {
+    const q = query(
+      collection(db, 'reports'),
+      where('reportedUserId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as Report)
+    )
+  } catch (error) {
+    console.error('Error fetching user reports:', error)
+    return []
+  }
+}
+
+export const fetchCommentContentById = async (commentId: string): Promise<string> => {
+  if (!commentId) return 'Comment not found'
+  
+  try {
+    const commentDoc = await getDoc(doc(db, 'comments', commentId))
+    
+    if (!commentDoc.exists()) {
+      return 'Comment not found or deleted'
+    }
+    
+    const commentData = commentDoc.data() as any
+    
+    // Try different possible field names for comment content
+    const content = commentData.content || commentData.text || commentData.comment || commentData.message
+    
+    if (content) {
+      return content
+    } else {
+      return 'Comment content unavailable'
+    }
+  } catch (error) {
+    console.error('Error fetching comment content:', error)
+    return 'Error loading comment content'
+  }
+}
+
+export const fetchRecommendationById = async (recommendationId: string) => {
+  if (!recommendationId) return null
+  
+  try {
+    const recommendationDoc = await getDoc(doc(db, 'recommendations', recommendationId))
+    
+    if (!recommendationDoc.exists()) {
+      return null
+    }
+    
+    const data = recommendationDoc.data()
+    return {
+      id: recommendationDoc.id,
+      title: data.title || '',
+      content: data.content || '',
+      imageUrl: data.imageUrl || '',
+      location: data.location || '',
+      created_by: data.created_by || '',
+      color: data.color || '#ff6f00',
+      category_id: data.category_id || '',
+      // Add any other fields you need
+    }
+  } catch (error) {
+    console.error('Error fetching recommendation:', error)
+    return null
+  }
+}
+
+export const updateReportAdminComment = async (reportId: string, comment: string, adminId: string): Promise<boolean> => {
+  try {
+    const reportRef = doc(db, 'reports', reportId)
+    await updateDoc(reportRef, {
+      adminComment: comment,
+      adminCommentAt: serverTimestamp(),
+      adminCommentBy: adminId,
+    })
+    return true
+  } catch (error) {
+    console.error('Error updating admin comment:', error)
+    return false
+  }
 }

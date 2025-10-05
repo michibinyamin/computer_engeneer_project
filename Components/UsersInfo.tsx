@@ -200,13 +200,13 @@ const styles = StyleSheet.create({
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e0e0e0',
+    backgroundColor: 'rgba(30, 58, 138, 0.9)',
     borderRadius: 8,
     padding: 14,
     marginBottom: 12,
   },
-  userText: { fontSize: 16, fontWeight: 'bold', color: '#111' },
-  uidText: { marginTop: 2, fontSize: 12, color: '#374151' },
+  userText: { fontSize: 16, fontWeight: 'bold', color: '#ffffffff' },
+  uidText: { marginTop: 2, fontSize: 12, color: '#ffffffff' },
 
   checkbox: {
     width: 26,
