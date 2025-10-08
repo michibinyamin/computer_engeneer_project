@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'RecoMate'
+rootProject.name = 'RecoMateDevelopment'
 
 dependencyResolutionManagement {
   versionCatalogs {

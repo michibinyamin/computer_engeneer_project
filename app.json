@@ -20,7 +20,24 @@
       }
     },
     "android": {
-      "permissions": ["ACCESS_FINE_LOCATION"]
-    }
+      "googleServicesFile":"./google-services.json",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.MOA.recomate"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": [
+            ""
+          ]
+        }
+      ]
+    ]
   }
 }

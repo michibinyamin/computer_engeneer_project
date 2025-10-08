@@ -24,12 +24,14 @@ import {
   doc,
   getDoc,
   Timestamp,
+  serverTimestamp,
 } from 'firebase/firestore'
 import {
   promoteMemberToAdmin,
   removeMemberByDocId,
   leaveGroup,
 } from '../Services'
+import { NotificationService } from '../notificationService'
 
 type MemberRow = {
   membershipDocId: string
@@ -82,7 +84,10 @@ const Members = () => {
   }, [groupId])
 
   const fetchMembers = async () => {
-    const q = query(collection(db, 'membership'), where('group_id', '==', groupId))
+    const q = query(
+      collection(db, 'membership'),
+      where('group_id', '==', groupId)
+    )
     const snapshot = await getDocs(q)
 
     const fetchedMembers: MemberRow[] = await Promise.all(
@@ -120,12 +125,67 @@ const Members = () => {
     }
 
     const userId = userSnapshot.docs[0].id
+    const invitedUserData = userSnapshot.docs[0].data()
+
+    // ✅ ADD: Check if user is inviting themselves
+    const currentUser = auth.currentUser
+    const isInvitingSelf = currentUser && userId === currentUser.uid
+
+    const currentUserDoc = await getDoc(
+      doc(db, 'users', currentUser?.uid || '')
+    )
+    const currentUserName = currentUserDoc.exists()
+      ? currentUserDoc.data().username
+      : 'Someone'
+
+    const groupDoc = await getDoc(doc(db, 'groups', groupId))
+    const groupName = groupDoc.exists() ? groupDoc.data().name : 'a group'
+
+    try {
+      // Only create notification if NOT inviting yourself
+      if (!isInvitingSelf) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: userId,
+          title: 'Group Invitation',
+          body: `${currentUserName} added you to "${groupName}"`,
+          data: {
+            groupId: groupId,
+            type: 'group_invite',
+            inviterName: currentUserName,
+          },
+          createdAt: serverTimestamp(),
+        })
+
+        // Only send push notification if NOT inviting yourself AND user has tokens
+        if (
+          invitedUserData.pushTokens &&
+          invitedUserData.pushTokens.length > 0
+        ) {
+          await NotificationService.sendDirectPushNotification(
+            invitedUserData.pushTokens[0],
+            'Group Invitation',
+            `${currentUserName} added you to "${groupName}"`
+          )
+        }
+      }
+
+      // Always show local notification to inviter
+      await NotificationService.scheduleLocalNotification(
+        'Invite Sent',
+        `You added ${inviteUsername} to ${groupName}`,
+        1
+      )
+    } catch (error) {
+      console.log('Notification error:', error)
+    }
+
+    // Rest of your code remains the same...
     await addDoc(collection(db, 'membership'), {
       membership_id: `membership_${Date.now()}`,
       group_id: groupId,
       user_id: userId,
       role: 'Member',
-      created_at: Timestamp.now(), // helps pick next admin later
+      created_at: Timestamp.now(),
     })
 
     Alert.alert('Success', `${inviteUsername} added successfully!`)
@@ -142,7 +202,10 @@ const Members = () => {
 
   const doPromote = async () => {
     if (!canManage || !menuFor) {
-      Alert.alert('Permission denied', 'You cannot manage members in this group.')
+      Alert.alert(
+        'Permission denied',
+        'You cannot manage members in this group.'
+      )
       return
     }
     if (menuFor.role === 'Admin') {
@@ -160,7 +223,10 @@ const Members = () => {
 
   const doRemove = async () => {
     if (!canManage || !menuFor) {
-      Alert.alert('Permission denied', 'You cannot manage members in this group.')
+      Alert.alert(
+        'Permission denied',
+        'You cannot manage members in this group.'
+      )
       return
     }
     const u = auth.currentUser
@@ -189,26 +255,26 @@ const Members = () => {
   }
 
   const onLeave = () => {
-  if (!isMember) return
-  Alert.alert('Leave group', 'Are you sure you want to leave this group?', [
-    { text: 'Cancel', style: 'cancel' },
-    {
-      text: 'Leave',
-      style: 'destructive',
-      onPress: async () => {
-        await leaveGroup(groupId, auth.currentUser?.uid || '')
+    if (!isMember) return
+    Alert.alert('Leave group', 'Are you sure you want to leave this group?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          await leaveGroup(groupId, auth.currentUser?.uid || '')
 
-       navigation.reset({
-          index: 1,
-          routes: [
-            { name: 'Login' },                              // keep Login in history
-            { name: 'Tabs', params: { initialTab: 'Groups' } },
-          ],
-        })
+          navigation.reset({
+            index: 1,
+            routes: [
+              { name: 'Login' }, // keep Login in history
+              { name: 'Tabs', params: { initialTab: 'Groups' } },
+            ],
+          })
+        },
       },
-    },
-  ])
-}
+    ])
+  }
 
   return (
     <ImageBackground
@@ -222,10 +288,12 @@ const Members = () => {
         <ScrollView contentContainerStyle={styles.listWrapper}>
           <View style={styles.rowHeader}>
             <Text style={[styles.colHeader, { flex: 1.2 }]}>Username</Text>
-            <Text style={[styles.colHeader, { flex: 0.8, textAlign: 'center' }]}>
+            <Text
+              style={[styles.colHeader, { flex: 0.8, textAlign: 'center' }]}
+            >
               Role
             </Text>
-            <Text style={[styles.colHeader, { width: 32 }]}>{' '}</Text>
+            <Text style={[styles.colHeader, { width: 32 }]}> </Text>
           </View>
 
           {members.map((member) => (
@@ -242,7 +310,11 @@ const Members = () => {
                   onPress={() => openMenu(member)}
                   style={styles.menuBtn}
                 >
-                  <Ionicons name="ellipsis-vertical" size={18} color="#dbeafe" />
+                  <Ionicons
+                    name="ellipsis-vertical"
+                    size={18}
+                    color="#dbeafe"
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -275,7 +347,10 @@ const Members = () => {
                 value={inviteUsername}
                 onChangeText={setInviteUsername}
               />
-              <TouchableOpacity style={styles.confirmBtn} onPress={handleInvite}>
+              <TouchableOpacity
+                style={styles.confirmBtn}
+                onPress={handleInvite}
+              >
                 <Text style={styles.confirmText}>Send</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setInviteModal(false)}>
@@ -423,7 +498,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  menuTitle: { color: '#fff', fontWeight: '700', fontSize: 16, marginBottom: 6 },
+  menuTitle: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+    marginBottom: 6,
+  },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',

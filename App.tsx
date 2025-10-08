@@ -8,6 +8,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from './firebase'
 
+// Import your existing components...
 import Register from './Components/Register'
 import Login from './Components/Login'
 import WelcomeScreen from './Components/WelcomeScreen'
@@ -24,6 +25,9 @@ import Sidebar from './Components/Sidebar'
 import EditProfile from './Components/EditProfile'
 import { Toast } from 'react-native-toast-message/lib/src/Toast'
 import ReviewingReports from './Components/ReviewingReports'
+
+// ✅ ADD THIS: Import Notification Provider
+import { NotificationProvider } from './NotificationContext'
 
 const Stack = createStackNavigator()
 const Drawer = createDrawerNavigator()
@@ -58,7 +62,6 @@ export default function App() {
   }, [])
 
   if (user === undefined) {
-    // Show loading spinner while checking auth state
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="darkblue" />
@@ -67,7 +70,8 @@ export default function App() {
   }
 
   return (
-    <>
+    // ✅ WRAP EVERYTHING with NotificationProvider
+    <NotificationProvider>
       <StatusBar style="auto" />
       <SafeAreaView style={styles.container}>
         <NavigationContainer>
@@ -83,16 +87,12 @@ export default function App() {
                 route.name !== 'EditProfile' && <CustomHeader />,
             })}
           >
-            {/* Auth / pre-app screens (no drawer here) */}
+            {/* Your existing screens... */}
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
-
-            {/* Main app wrapped by the drawer */}
             <Stack.Screen name="Tabs" component={TabsWithDrawer} />
-
-            {/* Other stack screens */}
             <Stack.Screen
               name="EditableRecommendation"
               component={EditableRecommendation}
@@ -112,7 +112,7 @@ export default function App() {
         </NavigationContainer>
       </SafeAreaView>
       <Toast />
-    </>
+    </NotificationProvider>
   )
 }
 
