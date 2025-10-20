@@ -58,6 +58,7 @@ const RecommendationList = ({
       recoId: string
       title: string
       content: string
+      tags: string[]
       imageUrl?: string
       location?: string
       created_by?: string
@@ -174,6 +175,7 @@ const RecommendationList = ({
                     recommendationId: option.recoId,
                     title: option.title,
                     content: option.content,
+                    tags:  option.tags,
                     imageUrl: option.imageUrl,
                     location: option.location,
                     color: option.color,
@@ -229,6 +231,7 @@ const RecommendationList = ({
               recommendationId: '',
               title: '',
               content: '',
+              tags: [],
               imageUrl: '',
               location: '',
               color: 'black',

@@ -90,6 +90,7 @@ export const fetchRecommendations = async (category_id: string | undefined) => {
       recoId: d.id,
       title: data.title,
       content: data.content,
+      tags: data.tags,
       imageUrl: data.imageUrl,
       location: data.location,
       created_by: data.created_by,
@@ -104,7 +105,8 @@ export const addRecommendation = async (
   content: string,
   imageUrl?: string,
   location?: string,
-  color?: string
+  color?: string,
+  tags?: string[],
 ): Promise<string | undefined> => {
   if (!title.trim() || !category_id) return
   try {
@@ -116,6 +118,7 @@ export const addRecommendation = async (
       imageUrl: imageUrl || '',
       location: location || '',
       color: color || '#ff6f00',
+      tags: tags || '',
     })
     return ref.id
   } catch (e) {
@@ -140,6 +143,7 @@ export const updateRecommendation = async (
   recommendationId: string,
   title: string,
   content: string,
+  tags: string[],
   imageUrl?: string,
   location?: string,
   color?: string
@@ -152,6 +156,7 @@ export const updateRecommendation = async (
       {
         title,
         content,
+        tags: tags || '',
         imageUrl: imageUrl || '',
         location: location || '',
         color: color || '#ff6f00',
@@ -206,6 +211,37 @@ export const addRating = async (
   })
   return true
 }
+
+
+// export const addTags = async (
+//   recommendationId: string,
+//   userId?: string,
+//   tag?: string,
+// ) => {
+//   if (!recommendationId || !userId ) return false// to check the size of the string
+//   const existing = await getDocs(
+//     query(
+//       collection(db, 'recommendations'),
+//       where('recommendation_id', '==', recommendationId),
+      
+//     )
+//   )
+//   if (!existing.empty) {
+//     await setDoc(
+//       existing.docs[0].ref,
+//       { tags, comment: comment || '' },
+//       { merge: true }
+//     )
+//     return false
+//   }
+//   await addDoc(collection(db, 'ratings'), {
+//     recommendation_id: recommendationId,
+//     user_id: userId,
+//     rating,
+//     comment: comment || '',
+//   })
+//   return true
+// }
 
 // returns average rating (or 0 if none)
 export const fetchRatingsByRecommendation = async (
@@ -730,6 +766,7 @@ export const fetchRecommendationById = async (recommendationId: string) => {
       location: data.location || '',
       created_by: data.created_by || '',
       color: data.color || '#ff6f00',
+      tags: data.tags || '',
       category_id: data.category_id || '',
       // Add any other fields you need
     }

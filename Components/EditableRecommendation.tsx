@@ -52,11 +52,27 @@ const COLORS = [
   '#FF69B4', // Hot Pink
 ]
 
+const TAGS = [
+  'Kosher',
+  'View point',
+  'Restaurant',
+  'Art',
+  'Food',
+  'Hikes',
+  'Games',
+  'Shopping',
+  'Views',
+  'Beaches',
+  'Museums',
+  'Parks'
+]
+
 type RouteParams = {
   category_id: string
   recommendationId?: string
   title: string
   content: string
+  tags : string[]
   imageUrl?: string
   location?: string
   color?: string
@@ -85,6 +101,7 @@ const EditableRecommendation = () => {
     recommendationId: initialRecommendationId = '',
     title: initialTitle,
     content: initialContent,
+    tags: initialTags = '',
     imageUrl,
     location: initialLocation = '',
     color = '#ff6f00',
@@ -97,6 +114,7 @@ const EditableRecommendation = () => {
   const [Mode, setMode] = useState<RouteParams['viewMode']>(viewMode)
   const [title, setTitle] = useState(initialTitle)
   const [content, setContent] = useState(initialContent)
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialTags || []);
   const [image, setImage] = useState(imageUrl || '')
   const [location, setLocation] = useState(initialLocation)
   const [selectedColor, setSelectedColor] = useState(color)
@@ -241,6 +259,7 @@ const EditableRecommendation = () => {
         recoId,
         title,
         content,
+        selectedTags,
         image,
         location,
         selectedColor
@@ -252,7 +271,8 @@ const EditableRecommendation = () => {
         content,
         image,
         location,
-        selectedColor
+        selectedColor,
+        selectedTags,
       )
       if (newId) {
         setRecommendationId(newId)
@@ -345,6 +365,12 @@ const EditableRecommendation = () => {
       },
     ])
   }
+
+  const toggleTag = (tag: string) => {
+  setSelectedTags(prev =>
+    prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+  );
+};
 
   const calculateDistance = (
     userLocation: { latitude: number; longitude: number } | null
@@ -489,27 +515,6 @@ const EditableRecommendation = () => {
           />
         )}
 
-        {/* Map preview in view mode */}
-        {/* {!inAddOrEdit && !!location ? (
-          <MapView
-            style={styles.location}
-            initialRegion={{
-              latitude: parseFloat(location.split(',')[0]),
-              longitude: parseFloat(location.split(',')[1]),
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            <Marker
-              coordinate={{
-                latitude: parseFloat(location.split(',')[0]),
-                longitude: parseFloat(location.split(',')[1]),
-              }}
-            />
-          </MapView>
-        ) : !inAddOrEdit ? (
-          <View style={{ height: 10 }} />
-        ) : null} */}
 
         {!inAddOrEdit && !!location ? (
           // i want to add here also the distance from the location to my current location
@@ -532,7 +537,31 @@ const EditableRecommendation = () => {
           <View style={{ height: 10 }} />
         ) : null}
 
-        {/* Map preview in view mode */}
+        {inAddOrEdit ? (
+          <View style={styles.tagsWrap}>
+            {TAGS.map((tag) => {
+              const isSelected = selectedTags.includes(tag);
+              return (
+                <TouchableOpacity
+                  key={tag}
+                  style={[styles.tagChip, isSelected && styles.tagChipSelected]}
+                  onPress={() => toggleTag(tag)}
+                >
+                  <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>
+                    {tag}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <Text style={styles.content}>
+            <Text style={{ fontWeight: '600' }}>Tags: </Text>
+            {selectedTags.join(', ')}
+          </Text>
+        )}
+
+
 
         {/* Color picker — ONLY when adding/editing (unchanged from your UI) */}
         {inAddOrEdit && (
@@ -966,6 +995,35 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  tagsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,            // RN 0.71+; if older, remove and use margins on chip
+    marginVertical: 8,
+  },
+  tagChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#fff',
+    marginRight: 8,    // keep if you can’t use gap
+    marginBottom: 8,   // keep if you can’t use gap
+  },
+  tagChipSelected: {
+    borderColor: '#000',
+    borderWidth: 2,
+    backgroundColor: '#f2f2f2',
+  },
+  tagText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  tagTextSelected: {
+    fontWeight: '700',
+    color: '#000',
   },
 })
 
