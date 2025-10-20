@@ -20,11 +20,8 @@ import {
   query,
   where,
   getDocs,
-  addDoc,
   doc,
   getDoc,
-  Timestamp,
-  serverTimestamp,
 } from 'firebase/firestore'
 import {
   promoteMemberToAdmin,
@@ -32,7 +29,6 @@ import {
   leaveGroup,
   handleGroupInvite,
 } from '../Services'
-import { NotificationService } from '../notificationService'
 
 type MemberRow = {
   membershipDocId: string

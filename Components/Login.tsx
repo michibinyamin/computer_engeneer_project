@@ -7,7 +7,6 @@ import { auth, db } from '../firebase'
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import * as WebBrowser from 'expo-web-browser'
 import * as Google from 'expo-auth-session/providers/google'
-import { makeRedirectUri } from 'expo-auth-session'
 
 WebBrowser.maybeCompleteAuthSession()
 

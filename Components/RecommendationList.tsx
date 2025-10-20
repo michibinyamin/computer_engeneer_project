@@ -5,9 +5,6 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  Modal,
-  TextInput,
-  BackHandler,
   Image,
   Animated,
 } from 'react-native'
@@ -24,7 +21,6 @@ import {
 import { auth, db } from '../firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { Ionicons } from '@expo/vector-icons'
-import * as Location from 'expo-location'
 
 const COLORS = [
   'black',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -9,8 +9,6 @@ import {
   ScrollView,
   Alert,
   Modal,
-  PermissionsAndroid,
-  Platform,
 } from 'react-native'
 import ReportModal from './ReportModal'
 import { useNavigation, useRoute } from '@react-navigation/native'

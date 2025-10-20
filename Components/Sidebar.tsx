@@ -9,7 +9,6 @@ import {
 } from 'react-native'
 import {
   DrawerContentScrollView,
-  DrawerItemList,
 } from '@react-navigation/drawer'
 import { useFocusEffect } from '@react-navigation/native'
 import { auth, db } from '../firebase'

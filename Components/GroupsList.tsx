@@ -29,8 +29,6 @@ const GroupsList = ({
   const [groupName, setGroupName] = useState('')
   const [groupDesc, setGroupDesc] = useState('')
   const [groupEntered, setGroupEntered] = useState('') // Id will be here
-  const user = auth.currentUser
-  const navigation = useNavigation<any>()
 
   const [scaleAnimEntered] = useState(new Animated.Value(0.8))
   const [opacityAnimEntered] = useState(new Animated.Value(0))

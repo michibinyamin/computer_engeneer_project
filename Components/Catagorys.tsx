@@ -8,11 +8,9 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  BackHandler,
 } from 'react-native'
 import {
   useNavigation,
-  useRoute,
   NavigationProp,
 } from '@react-navigation/native'
 import { db, auth } from '../firebase'
@@ -30,7 +28,6 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import RecommendationList from './RecommendationList'
 import adminEmails from '../adminEmails.json'
-import * as Location from 'expo-location'
 
 const randomColors = [
   '#cc6666', // darker red
