@@ -30,6 +30,7 @@ import {
   promoteMemberToAdmin,
   removeMemberByDocId,
   leaveGroup,
+  handleGroupInvite,
 } from '../Services'
 import { NotificationService } from '../notificationService'
 
@@ -111,82 +112,11 @@ const Members = () => {
   }
 
   const handleInvite = async () => {
-    if (!inviteUsername.trim()) return
-
-    const userQuery = query(
-      collection(db, 'users'),
-      where('username', '==', inviteUsername)
-    )
-    const userSnapshot = await getDocs(userQuery)
-
-    if (userSnapshot.empty) {
+    
+    if (!await handleGroupInvite(inviteUsername, groupId)) {
       Alert.alert('Error', 'User not found.')
       return
     }
-
-    const userId = userSnapshot.docs[0].id
-    const invitedUserData = userSnapshot.docs[0].data()
-
-    // ✅ ADD: Check if user is inviting themselves
-    const currentUser = auth.currentUser
-    const isInvitingSelf = currentUser && userId === currentUser.uid
-
-    const currentUserDoc = await getDoc(
-      doc(db, 'users', currentUser?.uid || '')
-    )
-    const currentUserName = currentUserDoc.exists()
-      ? currentUserDoc.data().username
-      : 'Someone'
-
-    const groupDoc = await getDoc(doc(db, 'groups', groupId))
-    const groupName = groupDoc.exists() ? groupDoc.data().name : 'a group'
-
-    try {
-      // Only create notification if NOT inviting yourself
-      if (!isInvitingSelf) {
-        await addDoc(collection(db, 'notifications'), {
-          userId: userId,
-          title: 'Group Invitation',
-          body: `${currentUserName} added you to "${groupName}"`,
-          data: {
-            groupId: groupId,
-            type: 'group_invite',
-            inviterName: currentUserName,
-          },
-          createdAt: serverTimestamp(),
-        })
-
-        // Only send push notification if NOT inviting yourself AND user has tokens
-        if (
-          invitedUserData.pushTokens &&
-          invitedUserData.pushTokens.length > 0
-        ) {
-          await NotificationService.sendDirectPushNotification(
-            invitedUserData.pushTokens[0],
-            'Group Invitation',
-            `${currentUserName} added you to "${groupName}"`
-          )
-        }
-      }
-
-      // Always show local notification to inviter
-      await NotificationService.scheduleLocalNotification(
-        'Invite Sent',
-        `You added ${inviteUsername} to ${groupName}`,
-        1
-      )
-    } catch (error) {
-      console.log('Notification error:', error)
-    }
-
-    // Rest of your code remains the same...
-    await addDoc(collection(db, 'membership'), {
-      membership_id: `membership_${Date.now()}`,
-      group_id: groupId,
-      user_id: userId,
-      role: 'Member',
-      created_at: Timestamp.now(),
-    })
 
     Alert.alert('Success', `${inviteUsername} added successfully!`)
     setInviteUsername('')
