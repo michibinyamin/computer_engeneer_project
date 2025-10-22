@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 22,
     fontWeight: 'bold',
-    //color: 'black',
-    color: '#f1f5f9', // soft white
+    color: 'black',
+    // color: '#f1f5f9', // soft white
   },
 
   fab: {

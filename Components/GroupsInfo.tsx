@@ -202,7 +202,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
+    backgroundColor: '#874040ff',
+
   },
 
   // ➕ toolbar styles

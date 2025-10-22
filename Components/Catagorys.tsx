@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: '#0a0f2c',
-    backgroundColor: 'white',
+    backgroundColor: '#05112aff',
     position: 'relative',
   },
   centeredGroupName: {

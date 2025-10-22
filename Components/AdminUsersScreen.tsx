@@ -145,7 +145,8 @@ const AdminUsersScreen = () => {
 
   if (!user) return (
     <ImageBackground
-      source={require('../assets/Glowing-Concepts-in-a-Blue-Dream.png')}
+      //source={require('../assets/Glowing-Concepts-in-a-Blue-Dream.png')}
+      source={require('../assets/Glowing-Icons-of-Inspiration-and-Knowledge.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
@@ -158,6 +159,7 @@ const AdminUsersScreen = () => {
   return (
     <ImageBackground
       source={require('../assets/Glowing-Concepts-in-a-Blue-Dream.png')}
+      // source={require('../assets/Glowing-Icons-of-Inspiration-and-Knowledge.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
     >

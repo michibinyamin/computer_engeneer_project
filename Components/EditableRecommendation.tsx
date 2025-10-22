@@ -132,42 +132,7 @@ const EditableRecommendation = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const canEdit = isPublisher || isAdmin
 
-  // const [myLocation, setMyLocation] = useState<{
-  //   latitude: number
-  //   longitude: number
-  // } | null>(null)
-
-  // useEffect(() => {
-  //   const getLocation = async () => {
-  //     try {
-  //       const { status } = await Location.getForegroundPermissionsAsync()
-
-  //       if (status !== 'granted') {
-  //         const request = await Location.requestForegroundPermissionsAsync()
-  //         if (request.status !== 'granted') {
-  //           console.warn('Permission not granted')
-  //           return
-  //         }
-  //       }
-
-  //       const location = await Location.getCurrentPositionAsync({})
-  //       setMyLocation({
-  //         latitude: location.coords.latitude,
-  //         longitude: location.coords.longitude,
-  //       })
-  //       console.log(
-  //         'current location:',
-  //         location.coords.latitude,
-  //         ',',
-  //         location.coords.longitude
-  //       )
-  //     } catch (err) {
-  //       console.error('Error:', err)
-  //     }
-  //   }
-
-  //   getLocation()
-  // }, [])
+  
 
   // Comments
   const [comments, setComments] = useState<
@@ -433,7 +398,8 @@ const EditableRecommendation = () => {
 
   return (
     <ImageBackground
-      source={require('../assets/Glowing-Concepts-in-a-Blue-Dream.png')}
+      // source={require('../assets/Glowing-Concepts-in-a-Blue-Dream.png')}
+      source={require('../assets/Glowing-Icons-of-Inspiration-and-Knowledge.png')}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
