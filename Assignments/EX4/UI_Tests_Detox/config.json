@@ -1,0 +1,4 @@
+{
+  "testRunner": "jest",
+  "setupFilesAfterEnv": ["./init.js"]
+}
