@@ -64,7 +64,8 @@ const TAGS = [
   'Views',
   'Beaches',
   'Museums',
-  'Parks'
+  'Parks',
+  'Movies'
 ]
 
 type RouteParams = {

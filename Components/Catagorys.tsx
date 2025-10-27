@@ -58,7 +58,7 @@ const Catagorys = ({
 }: {
   groupId: any
   setGroupEntered: (id: string) => void
-  myLocation: {
+  myLocation?: {
     latitude: number
     longitude: number
   } | null

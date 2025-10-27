@@ -182,7 +182,7 @@ const RecommendationList = ({
                     created_by: option.created_by,
                     viewMode: 'view',
                     myLocation: myLocation,
-                  })
+                  } as any)
                 }
               >
                 {option.imageUrl ? (
